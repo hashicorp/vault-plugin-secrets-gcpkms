@@ -76,8 +76,6 @@ func Backend() *backend {
 			b.pathReencrypt(),
 			b.pathSign(),
 			b.pathVerify(),
-
-			b.pathInfo(),
 		},
 	}
 

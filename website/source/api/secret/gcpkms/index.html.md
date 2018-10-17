@@ -17,44 +17,6 @@ This documentation assumes the Google Cloud KMS secrets engine is enabled at the
 `/gcpkms` path in Vault. Since it is possible to enable secrets engines at any
 location, please update your API calls accordingly.
 
-## Display Information
-
-This endpoint displays information about the plugin, such as the plugin version,
-where to file issues, and how to get help.
-
-| Method   | Path                     | Produces                  |
-| :------- | :------------------------| :------------------------ |
-| `GET`    | `gcpkms/info`            | `200 application/json`    |
-
-### Example Policy
-
-```hcl
-path "gcpkms/info" {
-  capabilities = ["read"]
-}
-```
-
-### Sample Request
-
-```text
-$ curl \
-    --header "X-Vault-Token: ..." \
-    --request GET \
-    https://127.0.0.1:8200/v1/gcpkms/info
-```
-
-### Sample Response
-
-```json
-{
-  "data": {
-    "commit": "5d9a27d",
-    "name": "vault-plugin-secrets-gcpkms",
-    "version": "0.0.1"
-  }
-}
-```
-
 ## Configure Credentials
 
 This endpoint configures the Google Cloud KMS secrets engine with credentials
