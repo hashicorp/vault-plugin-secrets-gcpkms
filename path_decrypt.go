@@ -18,7 +18,7 @@ func (b *backend) pathDecrypt() *framework.Path {
 
 		HelpSynopsis: "Decrypt a ciphertext value using a named key",
 		HelpDescription: `
-Use the named encryption key to decrypt an ciphertext string previously
+Use the named encryption key to decrypt a ciphertext string previously
 encrypted with this same key. The provided ciphertext come from a previous
 invocation of the /encrypt endpoint. It is not guaranteed to work with values
 encrypted with the same Google Cloud KMS key outside of Vault.
