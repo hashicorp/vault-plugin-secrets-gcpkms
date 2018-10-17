@@ -108,7 +108,7 @@ func (b *backend) KMSClient(ctx context.Context, s logical.Storage) (*kmsapi.Key
 	config, err := b.Config(ctx, s)
 	if err != nil {
 		b.kmsClientMutex.Unlock()
-		return nil, nil, nil
+		return nil, nil, err
 	}
 
 	// If credentials were provided, use those. Otherwise fall back to the
