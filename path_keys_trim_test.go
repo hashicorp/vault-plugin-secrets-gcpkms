@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/vault/logical"
-
 	"google.golang.org/api/iterator"
+
 	kmspb "google.golang.org/genproto/googleapis/cloud/kms/v1"
 )
 

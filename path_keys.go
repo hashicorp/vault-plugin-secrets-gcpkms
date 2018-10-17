@@ -14,12 +14,12 @@ import (
 	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/hashicorp/errwrap"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 	"google.golang.org/api/iterator"
 	"google.golang.org/genproto/protobuf/field_mask"
 
+	multierror "github.com/hashicorp/go-multierror"
 	kmspb "google.golang.org/genproto/googleapis/cloud/kms/v1"
 	grpccodes "google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"

@@ -9,11 +9,11 @@ import (
 
 	"github.com/gammazero/workerpool"
 	"github.com/hashicorp/errwrap"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 	"google.golang.org/api/iterator"
 
+	multierror "github.com/hashicorp/go-multierror"
 	kmspb "google.golang.org/genproto/googleapis/cloud/kms/v1"
 )
 
