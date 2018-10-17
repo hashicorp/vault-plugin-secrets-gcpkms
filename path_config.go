@@ -41,18 +41,7 @@ requests https://www.googleapis.com/auth/cloudkms.
 			logical.ReadOperation:   withFieldValidator(b.pathConfigRead),
 			logical.DeleteOperation: withFieldValidator(b.pathConfigDelete),
 		},
-
-		ExistenceCheck: b.pathConfigExistenceCheck,
 	}
-}
-
-// pathConfigExistenceCheck is used by Vault to determine if a configuration
-// already exists. This is used for ACL purposes.
-func (b *backend) pathConfigExistenceCheck(ctx context.Context, req *logical.Request, _ *framework.FieldData) (bool, error) {
-	if c, err := b.Config(ctx, req.Storage); err != nil || c == nil {
-		return false, nil
-	}
-	return true, nil
 }
 
 // pathConfigRead corresponds to READ gcpkms/config and is used to
@@ -61,9 +50,6 @@ func (b *backend) pathConfigRead(ctx context.Context, req *logical.Request, _ *f
 	c, err := b.Config(ctx, req.Storage)
 	if err != nil {
 		return nil, err
-	}
-	if c == nil {
-		return nil, nil
 	}
 
 	return &logical.Response{

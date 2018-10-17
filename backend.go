@@ -154,7 +154,7 @@ func (b *backend) KMSClient(s logical.Storage) (*kmsapi.KeyManagementClient, fun
 	// If credentials were provided, use those. Otherwise fall back to the
 	// default application credentials.
 	var creds *google.Credentials
-	if config != nil && config.Credentials != "" {
+	if config.Credentials != "" {
 		creds, err = google.CredentialsFromJSON(b.ctx, []byte(config.Credentials), config.Scopes...)
 		if err != nil {
 			b.kmsClientLock.Unlock()
@@ -190,6 +190,8 @@ func (b *backend) KMSClient(s logical.Storage) (*kmsapi.KeyManagementClient, fun
 }
 
 // Config parses and returns the configuration data from the storage backend.
+// Even when no user-defined data exists in storage, a Config is returned with
+// the default values.
 func (b *backend) Config(ctx context.Context, s logical.Storage) (*Config, error) {
 	c := DefaultConfig()
 
