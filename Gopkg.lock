@@ -84,12 +84,12 @@
   version = "v2.0.0"
 
 [[projects]]
+  branch = "master"
   digest = "1:f0d9d74edbd40fdeada436d5ac9cb5197407899af3fef85ff0137077ffe8ae19"
   name = "github.com/hashicorp/errwrap"
   packages = ["."]
   pruneopts = "NUT"
   revision = "8a6fb523712970c966eefc6b39ed2c5e74880354"
-  version = "v1.0.0"
 
 [[projects]]
   digest = "1:a5d940c38bf56f121721bfa747c66356df387cb9d5318c570c6d4170aab62862"
@@ -116,12 +116,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
   digest = "1:2ed138049ab373f696db2081ca48f15c5abdf20893803612a284f2bdce2bf443"
   name = "github.com/hashicorp/go-multierror"
   packages = ["."]
   pruneopts = "NUT"
   revision = "886a7fbe3eb1c874d46f623bfa70af45f425b3d1"
-  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
@@ -202,7 +202,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2df85e2596dae5c598ee34b58a0ad0fefa09241b01eca61d0aff6b899d058ecc"
+  digest = "1:5de0b6d0a5cae01b4157d5775d6c750872b03a55de6e6e3cfb5f55cb321f3b51"
   name = "github.com/hashicorp/vault"
   packages = [
     "api",
@@ -221,6 +221,7 @@
     "helper/pluginutil",
     "helper/salt",
     "helper/strutil",
+    "helper/useragent",
     "helper/wrapping",
     "logical",
     "logical/framework",
@@ -231,7 +232,7 @@
     "version",
   ]
   pruneopts = "NUT"
-  revision = "bc33dbd13ddd166a1b13773c324002b81b9210e3"
+  revision = "482b303b40426d8bdf1f545ba6d40e1f76d10a36"
 
 [[projects]]
   branch = "master"
@@ -240,6 +241,14 @@
   packages = ["."]
   pruneopts = "NUT"
   revision = "2f1d1f20f75d5404f53b9edf6b53ed5505508675"
+
+[[projects]]
+  branch = "master"
+  digest = "1:96604f2a95f0efe67e2eef3e86a361c95acfb1163e3d4dff09e14fac2cea1b73"
+  name = "github.com/jeffchao/backoff"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "9d7fd7aa17f229da501a53ec2de5d2b8612cc65b"
 
 [[projects]]
   digest = "1:a4df73029d2c42fabcb6b41e327d2f87e685284ec03edf76921c267d9cfc9c23"
@@ -495,9 +504,11 @@
     "github.com/hashicorp/go-multierror",
     "github.com/hashicorp/vault/helper/pluginutil",
     "github.com/hashicorp/vault/helper/strutil",
+    "github.com/hashicorp/vault/helper/useragent",
     "github.com/hashicorp/vault/logical",
     "github.com/hashicorp/vault/logical/framework",
     "github.com/hashicorp/vault/logical/plugin",
+    "github.com/jeffchao/backoff",
     "github.com/satori/go.uuid",
     "golang.org/x/oauth2/google",
     "google.golang.org/api/iterator",
