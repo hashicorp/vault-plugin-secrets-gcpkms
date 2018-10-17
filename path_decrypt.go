@@ -104,7 +104,7 @@ func (b *backend) pathDecryptWrite(ctx context.Context, req *logical.Request, d 
 		cryptoKey = fmt.Sprintf("%s/cryptoKeyVersions/%d", cryptoKey, keyVersion)
 	}
 
-	kmsClient, closer, err := b.KMSClient(ctx, req.Storage)
+	kmsClient, closer, err := b.KMSClient(req.Storage)
 	if err != nil {
 		return nil, err
 	}

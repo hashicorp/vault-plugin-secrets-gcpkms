@@ -268,8 +268,7 @@ func TestBackend_KMSClient(t *testing.T) {
 
 		b, storage := testBackend(t)
 
-		ctx := context.Background()
-		_, closer1, err := b.KMSClient(ctx, storage)
+		_, closer1, err := b.KMSClient(storage)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -277,8 +276,7 @@ func TestBackend_KMSClient(t *testing.T) {
 
 		doneCh := make(chan struct{})
 		go func() {
-			ctx := context.Background()
-			_, closer2, err := b.KMSClient(ctx, storage)
+			_, closer2, err := b.KMSClient(storage)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -298,14 +296,13 @@ func TestBackend_KMSClient(t *testing.T) {
 
 		b, storage := testBackend(t)
 
-		ctx := context.Background()
-		client1, closer1, err := b.KMSClient(ctx, storage)
+		client1, closer1, err := b.KMSClient(storage)
 		if err != nil {
 			t.Fatal(err)
 		}
 		defer closer1()
 
-		client2, closer2, err := b.KMSClient(ctx, storage)
+		client2, closer2, err := b.KMSClient(storage)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -323,8 +320,7 @@ func TestBackend_KMSClient(t *testing.T) {
 		b, storage := testBackend(t)
 		b.kmsClientLifetime = 50 * time.Millisecond
 
-		ctx := context.Background()
-		client1, closer1, err := b.KMSClient(ctx, storage)
+		client1, closer1, err := b.KMSClient(storage)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -332,7 +328,7 @@ func TestBackend_KMSClient(t *testing.T) {
 
 		time.Sleep(100 * time.Millisecond)
 
-		client2, closer2, err := b.KMSClient(ctx, storage)
+		client2, closer2, err := b.KMSClient(storage)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -352,8 +348,7 @@ func TestBackend_ResetClient(t *testing.T) {
 
 		b, storage := testBackend(t)
 
-		ctx := context.Background()
-		client, closer, err := b.KMSClient(ctx, storage)
+		client, closer, err := b.KMSClient(storage)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -58,7 +58,7 @@ point to a valid Google Cloud KMS crypto key.
 func (b *backend) pathKeysRotateWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	key := d.Get("key").(string)
 
-	kmsClient, closer, err := b.KMSClient(ctx, req.Storage)
+	kmsClient, closer, err := b.KMSClient(req.Storage)
 	if err != nil {
 		return nil, err
 	}

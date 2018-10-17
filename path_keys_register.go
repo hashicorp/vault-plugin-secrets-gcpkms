@@ -68,7 +68,7 @@ func (b *backend) pathKeysRegisterWrite(ctx context.Context, req *logical.Reques
 	verify := d.Get("verify").(bool)
 
 	if verify {
-		kmsClient, closer, err := b.KMSClient(ctx, req.Storage)
+		kmsClient, closer, err := b.KMSClient(req.Storage)
 		if err != nil {
 			return nil, err
 		}

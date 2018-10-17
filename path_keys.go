@@ -3,7 +3,6 @@ package gcpkms
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"path"
 	"sort"
 	"strings"
@@ -194,7 +193,7 @@ func (b *backend) pathKeysRead(ctx context.Context, req *logical.Request, d *fra
 		return nil, err
 	}
 
-	kmsClient, closer, err := b.KMSClient(ctx, req.Storage)
+	kmsClient, closer, err := b.KMSClient(req.Storage)
 	if err != nil {
 		return nil, err
 	}
@@ -250,7 +249,7 @@ func (b *backend) pathKeysList(ctx context.Context, req *logical.Request, d *fra
 // pathKeysWrite corresponds to PUT/POST gcpkms/keys/create/:key and creates a
 // new GCP KMS key and registers it for use in Vault.
 func (b *backend) pathKeysWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	kmsClient, closer, err := b.KMSClient(ctx, req.Storage)
+	kmsClient, closer, err := b.KMSClient(req.Storage)
 	if err != nil {
 		return nil, err
 	}
@@ -408,7 +407,7 @@ func (b *backend) pathKeysWrite(ctx context.Context, req *logical.Request, d *fr
 // pathKeysDelete corresponds to PUT/POST gcpkms/keys/delete/:key and deletes an
 // existing GCP KMS key and deregisters it from Vault.
 func (b *backend) pathKeysDelete(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	kmsClient, closer, err := b.KMSClient(ctx, req.Storage)
+	kmsClient, closer, err := b.KMSClient(req.Storage)
 	if err != nil {
 		return nil, err
 	}

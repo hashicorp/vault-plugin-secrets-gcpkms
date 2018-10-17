@@ -102,7 +102,7 @@ func (b *backend) pathReencryptWrite(ctx context.Context, req *logical.Request, 
 		return nil, errwrap.Wrapf("failed to base64 decode ciphtertext: {{err}}", err)
 	}
 
-	kmsClient, closer, err := b.KMSClient(ctx, req.Storage)
+	kmsClient, closer, err := b.KMSClient(req.Storage)
 	if err != nil {
 		return nil, err
 	}

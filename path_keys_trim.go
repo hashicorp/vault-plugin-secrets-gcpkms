@@ -65,7 +65,7 @@ Name of the key in Vault.
 // deletes all crypto key versions from Google Cloud KMS which are older than
 // the key's min_version.
 func (b *backend) pathKeysTrimWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	kmsClient, closer, err := b.KMSClient(ctx, req.Storage)
+	kmsClient, closer, err := b.KMSClient(req.Storage)
 	if err != nil {
 		return nil, err
 	}
