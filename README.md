@@ -92,16 +92,25 @@ tests, you must:
 - Have a GCP project with a service account with KMS admin privileges
 - Set `GOOGLE_CLOUD_PROJECT` to the name of the project
 
-**Warning:** the acceptance tests change real resources which may incur real
-costs. Please run acceptance tests at your own risk. The project is connected
-to CI, so you can also submit a Pull Request and the CI system will run the
-acceptance tests for you.
+We recommend running tests in a dedicated Google Cloud project. On a fresh
+project, you will need to enable the Cloud KMS API. This operation only needs to
+be completed once per project.
+
+```text
+$ gcloud services enable cloudkms.googleapis.com --project $GOOGLE_CLOUD_PROJECT
+```
+
+After the API is enabled, it may take a few minutes to propagate. Please wait
+and try again.
 
 To run the tests:
 
 ```text
 $ make test
 ```
+
+**Warning:** the acceptance tests change real resources which may incur real
+costs. Please run acceptance tests at your own risk.
 
 ### Cleanup
 

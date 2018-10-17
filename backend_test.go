@@ -214,10 +214,10 @@ func testCleanupKeyRing(tb testing.TB, keyRing string) {
 	for {
 		ck, err := it.Next()
 		if err != nil {
-			if err == iterator.Done {
-				break
+			if err != iterator.Done {
+				tb.Errorf("cleanup: failed to list crypto keys: %s %s", keyRing, err)
 			}
-			tb.Errorf("cleanup: failed to list crypto keys: %s %s", keyRing, err)
+			break
 		}
 
 		it := kmsClient.ListCryptoKeyVersions(ctx, &kmspb.ListCryptoKeyVersionsRequest{
@@ -226,10 +226,10 @@ func testCleanupKeyRing(tb testing.TB, keyRing string) {
 		for {
 			ckv, err := it.Next()
 			if err != nil {
-				if err == iterator.Done {
-					break
+				if err != iterator.Done {
+					tb.Errorf("cleanup: failed to list crypto key versions: %s %s", ck.Name, err)
 				}
-				tb.Errorf("cleanup: failed to list crypto key versions: %s %s", ck.Name, err)
+				break
 			}
 
 			if ckv.State != kmspb.CryptoKeyVersion_DESTROYED &&
