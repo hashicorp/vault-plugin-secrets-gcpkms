@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
+	"github.com/jeffchao/backoff"
 )
 
 // withFieldValidator wraps an OperationFunc and validates the user-supplied
@@ -46,4 +48,21 @@ func validateFields(req *logical.Request, data *framework.FieldData) error {
 func errMissingFields(f ...string) error {
 	return logical.CodedError(422, fmt.Sprintf(
 		"missing required field(s): %q", f))
+}
+
+// retryFib accepts a function and retries using a fibonacci algorithm.
+func retryFib(op func() error) error {
+	f := backoff.Fibonacci()
+	f.Interval = 100 * time.Millisecond
+	f.MaxRetries = 10
+	return f.Retry(op)
+}
+
+// retryExp accepts a function and retries using an exponential backoff
+// algorithm.
+func retryExp(op func() error) error {
+	f := backoff.Exponential()
+	f.Interval = 100 * time.Millisecond
+	f.MaxRetries = 10
+	return f.Retry(op)
 }

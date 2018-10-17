@@ -451,8 +451,11 @@ func (b *backend) pathKeysDelete(ctx context.Context, req *logical.Request, d *f
 		ckv := ckv
 
 		wp.Submit(func() {
-			if _, err := kmsClient.DestroyCryptoKeyVersion(ctx, &kmspb.DestroyCryptoKeyVersionRequest{
-				Name: ckv,
+			if err := retryFib(func() error {
+				_, err := kmsClient.DestroyCryptoKeyVersion(ctx, &kmspb.DestroyCryptoKeyVersionRequest{
+					Name: ckv,
+				})
+				return err
 			}); err != nil {
 				mu.Lock()
 				errs = multierror.Append(errs, errwrap.Wrapf(fmt.Sprintf("failed to destroy crypto key version %s: {{err}}", ckv), err))

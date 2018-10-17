@@ -2,6 +2,7 @@ package gcpkms
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -10,13 +11,15 @@ import (
 	"testing"
 	"time"
 
-	hclog "github.com/hashicorp/go-hclog"
+	"github.com/gammazero/workerpool"
+	"github.com/hashicorp/vault/helper/useragent"
 	"github.com/hashicorp/vault/logical"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc/connectivity"
 
 	kmsapi "cloud.google.com/go/kms/apiv1"
+	hclog "github.com/hashicorp/go-hclog"
 	uuid "github.com/satori/go.uuid"
 	kmspb "google.golang.org/genproto/googleapis/cloud/kms/v1"
 	grpccodes "google.golang.org/grpc/codes"
@@ -67,7 +70,7 @@ func testKMSClient(tb testing.TB) *kmsapi.KeyManagementClient {
 	ctx := context.Background()
 	kmsClient, err := kmsapi.NewKeyManagementClient(ctx,
 		option.WithScopes(defaultScope),
-		option.WithUserAgent(userAgent),
+		option.WithUserAgent(useragent.String()),
 	)
 	if err != nil {
 		tb.Fatalf("failed to create kms client: %s", err)
@@ -178,20 +181,21 @@ func testCreateKMSCryptoKeyPurpose(tb testing.TB, purpose kmspb.CryptoKey_Crypto
 	}
 
 	// Wait for the key to be ready.
-	for i := 1; i <= 10; i++ {
+	if err := retryFib(func() error {
 		ckv, err := kmsClient.GetCryptoKeyVersion(ctx, &kmspb.GetCryptoKeyVersionRequest{
 			Name: ck.Name + "/cryptoKeyVersions/1",
 		})
 		if err != nil {
-			tb.Fatalf("failed to get crypto key version: %s", err)
+			return err
 		}
 		if ckv.State == kmspb.CryptoKeyVersion_ENABLED {
-			return ck.Name, cleanup
+			return nil
 		}
-		time.Sleep(time.Duration(i*500) * time.Millisecond)
+		return errors.New("key is not in ready state")
+	}); err != nil {
+		tb.Fatal("key did not enter ready state")
 	}
 
-	tb.Fatal("key did not enter ready state")
 	return ck.Name, cleanup
 }
 
@@ -235,13 +239,25 @@ func testCleanupKeyRing(tb testing.TB, keyRing string) {
 		}
 	}
 
+	wp := workerpool.New(25)
 	for _, ckv := range ckvs {
-		if _, err := kmsClient.DestroyCryptoKeyVersion(ctx, &kmspb.DestroyCryptoKeyVersionRequest{
-			Name: ckv,
-		}); err != nil {
-			tb.Fatalf("cleanup: failed to destroy crypto key version %q: %s", ckv, err)
-		}
+		ckv := ckv
+
+		wp.Submit(func() {
+			if err := retryFib(func() error {
+				if _, err := kmsClient.DestroyCryptoKeyVersion(ctx, &kmspb.DestroyCryptoKeyVersionRequest{
+					Name: ckv,
+				}); err != nil {
+					return err
+				}
+				return nil
+			}); err != nil {
+				tb.Errorf("cleanup: failed to destroy crypto key version %q: %s", ckv, err)
+			}
+		})
 	}
+
+	wp.StopWait()
 }
 
 func TestBackend_KMSClient(t *testing.T) {

@@ -2,13 +2,11 @@ package gcpkms
 
 import (
 	"context"
-	"fmt"
-	"runtime"
 	"sync"
 	"time"
 
 	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/vault-plugin-secrets-gcpkms/version"
+	"github.com/hashicorp/vault/helper/useragent"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 	"golang.org/x/oauth2/google"
@@ -18,10 +16,6 @@ import (
 )
 
 var (
-	// userAgent is the user-agent string to be sent with all requests.
-	userAgent = fmt.Sprintf("%s/%s (+%s; %s)",
-		version.Name, version.Version, version.URL, runtime.Version())
-
 	// defaultClientLifetime is the amount of time to cache the KMS client. This
 	// has to be less than 60 minutes or the oauth token will expire and
 	// subsequent requests will fail. The reason we cache the client is because
@@ -141,7 +135,7 @@ func (b *backend) KMSClient(ctx context.Context, s logical.Storage) (*kmsapi.Key
 	client, err := kmsapi.NewKeyManagementClient(ctx,
 		option.WithCredentials(creds),
 		option.WithScopes(config.Scopes...),
-		option.WithUserAgent(userAgent),
+		option.WithUserAgent(useragent.String()),
 	)
 	if err != nil {
 		b.kmsClientMutex.Unlock()
