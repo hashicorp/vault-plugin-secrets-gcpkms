@@ -8,9 +8,6 @@ const (
 
 	// Version is the version of the release.
 	Version = "0.0.1"
-
-	// URL is the url to get support and view the code.
-	URL = "https://github.com/hashicorp/vault-plugin-secrets-gcpkms"
 )
 
 var (
