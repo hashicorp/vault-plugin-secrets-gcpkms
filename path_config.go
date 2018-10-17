@@ -2,6 +2,7 @@ package gcpkms
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/vault/logical"
@@ -85,7 +86,7 @@ func (b *backend) pathConfigUpdate(ctx context.Context, req *logical.Request, d 
 	// Update the configuration
 	changed, err := c.Update(d)
 	if err != nil {
-		return nil, logical.CodedError(422, err.Error())
+		return nil, logical.CodedError(http.StatusBadRequest, err.Error())
 	}
 
 	// Only do the following if the config is different

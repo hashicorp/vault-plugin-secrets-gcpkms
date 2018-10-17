@@ -3,6 +3,7 @@ package gcpkms
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sort"
 	"strings"
 	"time"
@@ -17,7 +18,7 @@ import (
 func withFieldValidator(f framework.OperationFunc) framework.OperationFunc {
 	return func(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 		if err := validateFields(req, d); err != nil {
-			return nil, logical.CodedError(422, err.Error())
+			return nil, logical.CodedError(http.StatusBadRequest, err.Error())
 		}
 		return f(ctx, req, d)
 	}
@@ -46,7 +47,7 @@ func validateFields(req *logical.Request, data *framework.FieldData) error {
 // errMissingFields is a helper to return an error when required fields are
 // missing.
 func errMissingFields(f ...string) error {
-	return logical.CodedError(422, fmt.Sprintf(
+	return logical.CodedError(http.StatusBadRequest, fmt.Sprintf(
 		"missing required field(s): %q", f))
 }
 
