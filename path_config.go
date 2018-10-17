@@ -35,13 +35,27 @@ requests https://www.googleapis.com/auth/cloudkms.
 			},
 		},
 
+		ExistenceCheck: b.pathConfigExists,
+
 		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.CreateOperation: withFieldValidator(b.pathConfigUpdate),
-			logical.UpdateOperation: withFieldValidator(b.pathConfigUpdate),
+			logical.CreateOperation: withFieldValidator(b.pathConfigWrite),
+			logical.UpdateOperation: withFieldValidator(b.pathConfigWrite),
 			logical.ReadOperation:   withFieldValidator(b.pathConfigRead),
 			logical.DeleteOperation: withFieldValidator(b.pathConfigDelete),
 		},
 	}
+}
+
+// pathConfigExists checks if the configuration exists.
+func (b *backend) pathConfigExists(ctx context.Context, req *logical.Request, _ *framework.FieldData) (bool, error) {
+	entry, err := req.Storage.Get(ctx, "config")
+	if err != nil {
+		return false, errwrap.Wrapf("failed to get configuration from storage: {{err}}", err)
+	}
+	if entry == nil || len(entry.Value) == 0 {
+		return false, nil
+	}
+	return true, nil
 }
 
 // pathConfigRead corresponds to READ gcpkms/config and is used to
@@ -59,9 +73,9 @@ func (b *backend) pathConfigRead(ctx context.Context, req *logical.Request, _ *f
 	}, nil
 }
 
-// pathConfigUpdate corresponds to both CREATE and UPDATE gcpkms/config and is
+// pathConfigWrite corresponds to both CREATE and UPDATE gcpkms/config and is
 // used to create or update the current configuration.
-func (b *backend) pathConfigUpdate(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathConfigWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	// Get the current configuration, if it exists
 	c, err := b.Config(ctx, req.Storage)
 	if err != nil {
