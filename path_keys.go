@@ -280,7 +280,7 @@ func (b *backend) pathKeysWrite(ctx context.Context, req *logical.Request, d *fr
 
 		purpose, ok := keyPurposes[strings.ToLower(v.(string))]
 		if !ok {
-			return nil, logical.CodedError(http.StatusBadRequest, fmt.Sprintf(
+			return nil, logical.CodedError(400, fmt.Sprintf(
 				"unknown purpose %q, valid purposes are %q", v, keyPurposeNames()))
 		}
 		ck.Purpose = purpose
@@ -292,7 +292,7 @@ func (b *backend) pathKeysWrite(ctx context.Context, req *logical.Request, d *fr
 	if v, ok := d.GetOk("algorithm"); ok {
 		algorithm, ok := keyAlgorithms[strings.ToLower(v.(string))]
 		if !ok {
-			return nil, logical.CodedError(http.StatusBadRequest, fmt.Sprintf(
+			return nil, logical.CodedError(400, fmt.Sprintf(
 				"unknown algorithm %q, valid algorithms are %q", v, keyAlgorithmNames()))
 		}
 		ck.VersionTemplate.Algorithm = algorithm
@@ -312,7 +312,7 @@ func (b *backend) pathKeysWrite(ctx context.Context, req *logical.Request, d *fr
 
 		protectionLevel, ok := keyProtectionLevels[strings.ToLower(v.(string))]
 		if !ok {
-			return nil, logical.CodedError(http.StatusBadRequest, fmt.Sprintf(
+			return nil, logical.CodedError(400, fmt.Sprintf(
 				"unknown protection level %q, valid protection levels are %q", v, keyProtectionLevelNames()))
 		}
 		ck.VersionTemplate.ProtectionLevel = protectionLevel
@@ -578,5 +578,5 @@ func protectionLevelToString(p kmspb.ProtectionLevel) string {
 // errImmutable is a logical coded error that is returned when the user tries to
 // modfiy an immutable field.
 func errImmutable(s string) error {
-	return logical.CodedError(http.StatusBadRequest, fmt.Sprintf("cannot change %s after key creation", s))
+	return logical.CodedError(400, fmt.Sprintf("cannot change %s after key creation", s))
 }
