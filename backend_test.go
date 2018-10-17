@@ -90,7 +90,7 @@ func testKMSKeyRingName(tb testing.TB, name string) string {
 	}
 
 	if name == "" {
-		name = fmt.Sprintf("%s", uuid.NewV4())
+		name = fmt.Sprintf("vault-test-%s", uuid.NewV4())
 	}
 
 	return fmt.Sprintf("projects/%s/locations/us-east1/keyRings/%s", project, name)

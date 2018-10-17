@@ -114,7 +114,7 @@ $ export GOOGLE_CLOUD_PROJECT=my-test-project
 $ go run test/cleanup/main.go
 ```
 
-**WARNING!** This will delete all keys in all key rings, so do not run this
+**WARNING!** This will delete all keys in most key rings, so do not run this
 against a production project!
 
 [kms]: https://cloud.google.com/kms

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/gammazero/workerpool"
@@ -198,7 +199,9 @@ func listKRs(parent string) []string {
 			log.Printf("cleanup: failed to list key rings: %s", err)
 		}
 
-		krs = append(krs, kr.Name)
+		if strings.HasPrefix(kr.Name, "vault-test-") {
+			krs = append(krs, kr.Name)
+		}
 	}
 
 	return krs
