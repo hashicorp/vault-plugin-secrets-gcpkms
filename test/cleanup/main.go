@@ -123,7 +123,7 @@ func listCKVs(parent string) []string {
 			if err == iterator.Done {
 				break
 			}
-			log.Printf("cleanup: failed to list crypto key versions: %s %s", ckv.Name, err)
+			log.Printf("cleanup: failed to list crypto key versions: %s %s", parent, err)
 		}
 
 		if ckv.State != kmspb.CryptoKeyVersion_DESTROYED &&
