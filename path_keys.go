@@ -360,6 +360,14 @@ func (b *backend) pathKeysWrite(ctx context.Context, req *logical.Request, d *fr
 	})
 	if err != nil {
 		if terr, ok := grpcstatus.FromError(err); ok && terr.Code() == grpccodes.AlreadyExists {
+			if req.Operation != logical.UpdateOperation {
+				resp := logical.ErrorResponse(
+					"cannot update a key that is not already registered - register the " +
+						"key first using the /keys/register endpoint, and then update any " +
+						"configuration fields.")
+				return resp, logical.ErrPermissionDenied
+			}
+
 			var paths []string
 			ck.Name = fmt.Sprintf("%s/cryptoKeys/%s", kr.Name, cryptoKey)
 

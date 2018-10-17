@@ -3,7 +3,6 @@ package gcpkms
 import (
 	"context"
 	"fmt"
-	"path"
 	"reflect"
 	"strings"
 	"testing"
@@ -142,11 +141,6 @@ func TestPathKeys_Write(t *testing.T) {
 	keyringExist, cleanup := testCreateKMSKeyRing(t, "")
 	defer cleanup()
 
-	kmsClient := testKMSClient(t)
-
-	cryptoKey, cleanup := testCreateKMSCryptoKeySymmetric(t)
-	defer cleanup()
-
 	cases := []struct {
 		name string
 		data map[string]interface{}
@@ -167,14 +161,6 @@ func TestPathKeys_Write(t *testing.T) {
 				"crypto_key": "my-crypto-key",
 			},
 			true,
-		},
-		{
-			"key_ring_and_crypto_key_exist",
-			map[string]interface{}{
-				"key_ring":   path.Dir(path.Dir(cryptoKey)),
-				"crypto_key": path.Base(cryptoKey),
-			},
-			false,
 		},
 		{
 			"algorithm_symmetric_encryption",
@@ -338,6 +324,7 @@ func TestPathKeys_Write(t *testing.T) {
 					t.Fatal(err)
 				}
 
+				kmsClient := testKMSClient(t)
 				cryptoKey := fmt.Sprintf("%s/cryptoKeys/%s", tc.data["key_ring"], tc.data["crypto_key"])
 				ck, err := kmsClient.GetCryptoKey(ctx, &kmspb.GetCryptoKeyRequest{
 					Name: cryptoKey,
