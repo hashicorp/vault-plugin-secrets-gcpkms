@@ -123,70 +123,83 @@ func (b *backend) resetClient() {
 	b.kmsClientCreateTime = time.Unix(0, 0).UTC()
 }
 
+// validClient returns a boolean indicating if the attached client is still
+// valid. This is not safe to be called concurrently. Callers must allocate an
+// RLock on kmsClientLock before accessing.
+func (b *backend) validClient() bool {
+	return b.kmsClient != nil && time.Now().UTC().Sub(b.kmsClientCreateTime) < b.kmsClientLifetime
+}
+
 // KMSClient creates a new client for talking to the GCP KMS service.
 func (b *backend) KMSClient(s logical.Storage) (*kmsapi.KeyManagementClient, func(), error) {
-	// If the client already exists and is valid, return it
-	b.kmsClientLock.RLock()
-	if b.kmsClient != nil && time.Now().UTC().Sub(b.kmsClientCreateTime) < b.kmsClientLifetime {
-		closer := func() { b.kmsClientLock.RUnlock() }
-		return b.kmsClient, closer, nil
-	}
-	b.kmsClientLock.RUnlock()
-
-	// Acquire a full lock. Since all invocations acquire a read lock and defer
-	// the release of that lock, this will block until all clients are no longer
-	// in use. At that point, we can acquire a globally exclusive lock to close
-	// any connections and create a new client.
-	b.kmsClientLock.Lock()
-
-	b.Logger().Debug("creating new KMS client")
-
-	// Attempt to close an existing client if we have one.
-	b.resetClient()
-
-	// Get the config
-	config, err := b.Config(b.ctx, s)
-	if err != nil {
-		b.kmsClientLock.Unlock()
-		return nil, nil, err
-	}
-
-	// If credentials were provided, use those. Otherwise fall back to the
-	// default application credentials.
-	var creds *google.Credentials
-	if config.Credentials != "" {
-		creds, err = google.CredentialsFromJSON(b.ctx, []byte(config.Credentials), config.Scopes...)
-		if err != nil {
-			b.kmsClientLock.Unlock()
-			return nil, nil, errwrap.Wrapf("failed to parse credentials: {{err}}", err)
+	for {
+		// If the client already exists and is valid, return it
+		b.kmsClientLock.RLock()
+		if b.validClient() {
+			closer := func() { b.kmsClientLock.RUnlock() }
+			return b.kmsClient, closer, nil
 		}
-	} else {
-		creds, err = google.FindDefaultCredentials(b.ctx, config.Scopes...)
-		if err != nil {
-			b.kmsClientLock.Unlock()
-			return nil, nil, errwrap.Wrapf("failed to get default token source: {{err}}", err)
+		b.kmsClientLock.RUnlock()
+
+		// Acquire a full lock. Since all invocations acquire a read lock and defer
+		// the release of that lock, this will block until all clients are no longer
+		// in use. At that point, we can acquire a globally exclusive lock to close
+		// any connections and create a new client.
+		b.kmsClientLock.Lock()
+
+		// Even though we have an exclusive lock, it's possible that our lock above
+		// was blocking while someone else had an exclusive lock, so we should check
+		// and ensure that we still need a new client. Another goroutine could have
+		// updated to a newer client between our RUnlock and Lock.
+		if !b.validClient() {
+			b.Logger().Debug("creating new KMS client")
+
+			// Attempt to close an existing client if we have one.
+			b.resetClient()
+
+			// Get the config
+			config, err := b.Config(b.ctx, s)
+			if err != nil {
+				b.kmsClientLock.Unlock()
+				return nil, nil, err
+			}
+
+			// If credentials were provided, use those. Otherwise fall back to the
+			// default application credentials.
+			var creds *google.Credentials
+			if config.Credentials != "" {
+				creds, err = google.CredentialsFromJSON(b.ctx, []byte(config.Credentials), config.Scopes...)
+				if err != nil {
+					b.kmsClientLock.Unlock()
+					return nil, nil, errwrap.Wrapf("failed to parse credentials: {{err}}", err)
+				}
+			} else {
+				creds, err = google.FindDefaultCredentials(b.ctx, config.Scopes...)
+				if err != nil {
+					b.kmsClientLock.Unlock()
+					return nil, nil, errwrap.Wrapf("failed to get default token source: {{err}}", err)
+				}
+			}
+
+			// Create and return the KMS client with a custom user agent.
+			client, err := kmsapi.NewKeyManagementClient(b.ctx,
+				option.WithCredentials(creds),
+				option.WithScopes(config.Scopes...),
+				option.WithUserAgent(useragent.String()),
+			)
+			if err != nil {
+				b.kmsClientLock.Unlock()
+				return nil, nil, errwrap.Wrapf("failed to create KMS client: {{err}}", err)
+			}
+
+			// Cache the client
+			b.kmsClient = client
+			b.kmsClientCreateTime = time.Now().UTC()
 		}
-	}
 
-	// Create and return the KMS client with a custom user agent.
-	client, err := kmsapi.NewKeyManagementClient(b.ctx,
-		option.WithCredentials(creds),
-		option.WithScopes(config.Scopes...),
-		option.WithUserAgent(useragent.String()),
-	)
-	if err != nil {
+		// Unlock and start back up at the top, allowed for the RLock to take place.
 		b.kmsClientLock.Unlock()
-		return nil, nil, errwrap.Wrapf("failed to create KMS client: {{err}}", err)
 	}
-
-	// Cache the client
-	b.kmsClient = client
-	b.kmsClientCreateTime = time.Now().UTC()
-	b.kmsClientLock.Unlock()
-
-	b.kmsClientLock.RLock()
-	closer := func() { b.kmsClientLock.RUnlock() }
-	return client, closer, nil
 }
 
 // Config parses and returns the configuration data from the storage backend.
