@@ -301,7 +301,7 @@ This field is required.
 ```text
 $ curl \
     --header "X-Vault-Token: ..." \
-    --request POST \
+    --get \
     --data @payload.json \
     https://127.0.0.1:8200/v1/gcpkms/pubkey/my-key
 ```
