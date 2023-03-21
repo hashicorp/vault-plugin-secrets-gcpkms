@@ -17,9 +17,9 @@ deps:
 .PHONY: deps
 
 # dev builds the plugin for local development
-.PHONY: dev
 dev:
 	CGO_ENABLED=0 go build -o bin/$(PLUGIN_NAME) cmd/$(PLUGIN_NAME)/main.go
+.PHONY: dev
 
 # test runs the tests
 test:

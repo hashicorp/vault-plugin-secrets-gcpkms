@@ -71,7 +71,7 @@ instructions are only useful if you want to develop against the plugin.**
     $ make dev
     ```
 
-    The plugin binary will be place in the `./bin` directory.
+    The plugin binary will be written to the `./bin` directory.
 
 1. Run Vault plugins from that directory:
 
