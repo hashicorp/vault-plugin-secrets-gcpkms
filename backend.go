@@ -28,6 +28,9 @@ var (
 	// the process for looking up credentials is not performant and the overhead
 	// is too significant for a plugin that will receive this much traffic.
 	defaultClientLifetime = 30 * time.Minute
+
+	// operationPrefixGoogleCloudKMS is used as a prefix for OpenAPI operation id's.
+	operationPrefixGoogleCloudKMS = "google-cloud-kms"
 )
 
 type backend struct {
