@@ -34,7 +34,7 @@ func (b *backend) pathKeys() *framework.Path {
 		DisplayAttrs: &framework.DisplayAttributes{
 			OperationPrefix: operationPrefixGoogleCloudKMS,
 			OperationVerb:   "list",
-            OperationSuffix: "keys"
+			OperationSuffix: "keys",
 		},
 
 		HelpSynopsis:    "List named keys",
@@ -52,7 +52,7 @@ func (b *backend) pathKeysCRUD() *framework.Path {
 
 		DisplayAttrs: &framework.DisplayAttributes{
 			OperationPrefix: operationPrefixGoogleCloudKMS,
-            OperationSuffix: "key"
+			OperationSuffix: "key",
 		},
 
 		HelpSynopsis: "Interact with crypto keys in Vault and Google Cloud KMS",
