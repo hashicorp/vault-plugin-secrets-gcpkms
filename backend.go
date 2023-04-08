@@ -19,7 +19,12 @@ import (
 	kmsapi "cloud.google.com/go/kms/apiv1"
 )
 
-const userAgentPluginName = "secrets-gcpkms"
+const (
+	userAgentPluginName = "secrets-gcpkms"
+
+	// operationPrefixGoogleCloudKMS is used as a prefix for OpenAPI operation id's.
+	operationPrefixGoogleCloudKMS = "google-cloud-kms"
+)
 
 var (
 	// defaultClientLifetime is the amount of time to cache the KMS client. This
@@ -28,9 +33,6 @@ var (
 	// the process for looking up credentials is not performant and the overhead
 	// is too significant for a plugin that will receive this much traffic.
 	defaultClientLifetime = 30 * time.Minute
-
-	// operationPrefixGoogleCloudKMS is used as a prefix for OpenAPI operation id's.
-	operationPrefixGoogleCloudKMS = "google-cloud-kms"
 )
 
 type backend struct {
