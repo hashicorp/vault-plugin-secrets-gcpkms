@@ -7,13 +7,17 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
+	"github.com/patrickmn/go-cache"
 
 	kmspb "google.golang.org/genproto/googleapis/cloud/kms/v1"
 )
+
+var keysCache = cache.New(24*time.Hour, 10*time.Minute)
 
 func (b *backend) pathDecrypt() *framework.Path {
 	return &framework.Path{
@@ -119,11 +123,19 @@ func (b *backend) pathDecryptWrite(ctx context.Context, req *logical.Request, d 
 
 	// Lookup the key so we can determine the type of decryption (symmetric or
 	// asymmetric).
-	ck, err := kmsClient.GetCryptoKey(ctx, &kmspb.GetCryptoKeyRequest{
-		Name: k.CryptoKeyID,
-	})
-	if err != nil {
-		return nil, errwrap.Wrapf("failed to get underlying crypto key: {{err}}", err)
+	var ck *kmspb.CryptoKey
+	cachedCk, found := keysCache.Get(k.CryptoKeyID)
+	if !found {
+		fetchedCk, err := kmsClient.GetCryptoKey(ctx, &kmspb.GetCryptoKeyRequest{
+			Name: k.CryptoKeyID,
+		})
+		if err != nil {
+			return nil, errwrap.Wrapf("failed to get underlying crypto key: {{err}}", err)
+		}
+		_ = keysCache.Add(k.CryptoKeyID, fetchedCk, cache.DefaultExpiration)
+		ck = fetchedCk
+	} else {
+		ck = cachedCk.(*kmspb.CryptoKey)
 	}
 
 	var plaintext string
