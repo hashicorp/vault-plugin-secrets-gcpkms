@@ -1,6 +1,6 @@
 ## Unreleased
 
-## v0.15.1
+## v0.15.1 (September 5th, 2023)
 
 IMPROVEMENTS:
 
