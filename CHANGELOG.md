@@ -1,5 +1,9 @@
 ## Unreleased
 
+IMPROVEMENTS:
+
+* Added cache on key metadata lookup to avoid quota issues [GH-33](https://github.com/hashicorp/vault-plugin-secrets-gcpkms/pull/33)
+
 ## v0.15.0
 
 ### IMPROVEMENTS:
