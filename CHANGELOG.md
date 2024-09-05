@@ -10,6 +10,7 @@
   * `google.golang.org/api` v0.181.0 -> v0.196.0
   * `google.golang.org/genproto` v0.0.0-20240520151616-dc85e6b867a5 -> v0.0.0-20240903143218-8af14fe29dc1
   * `google.golang.org/grpc` v1.64.0 -> v1.66.0
+  * `github.com/hashicorp/go-retryablehttp` v0.7.6 -> v0.7.7
 
 
 ## v0.17.0 (May 21st, 2024)
