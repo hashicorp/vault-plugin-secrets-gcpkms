@@ -6,8 +6,10 @@ package gcpkms
 import (
 	"context"
 	"reflect"
+	"strings"
 	"testing"
 
+	"github.com/hashicorp/vault/sdk/helper/jsonutil"
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
@@ -79,7 +81,8 @@ func TestBackend_PathConfigUpdate(t *testing.T) {
 	})
 
 	t.Run("not_exist", func(t *testing.T) {
-
+		credBytes, err := getTestCredentials()
+		credJson := string(credBytes)
 		b, storage := testBackend(t)
 		if _, err := b.HandleRequest(context.Background(), &logical.Request{
 			Storage:   storage,
@@ -87,7 +90,7 @@ func TestBackend_PathConfigUpdate(t *testing.T) {
 			Path:      "config",
 			Data: map[string]interface{}{
 				"scopes":      "foo,bar",
-				"credentials": "creds",
+				"credentials": credJson,
 			},
 		}); err != nil {
 			t.Fatal(err)
@@ -98,7 +101,7 @@ func TestBackend_PathConfigUpdate(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if v, exp := config.Credentials, "creds"; v != exp {
+		if v, exp := config.Credentials, strings.TrimSpace(credJson); v != exp {
 			t.Errorf("expected %q to be %q", v, exp)
 		}
 
@@ -110,10 +113,11 @@ func TestBackend_PathConfigUpdate(t *testing.T) {
 	t.Run("exist", func(t *testing.T) {
 
 		b, storage := testBackend(t)
-
+		credBytes, err := getTestCredentials()
+		credJson := string(credBytes)
 		entry, err := logical.StorageEntryJSON("config", &Config{
 			Scopes:      []string{"foo"},
-			Credentials: "creds",
+			Credentials: strings.TrimSpace(credJson),
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -128,7 +132,7 @@ func TestBackend_PathConfigUpdate(t *testing.T) {
 			Path:      "config",
 			Data: map[string]interface{}{
 				"scopes":      "foo,bar",
-				"credentials": "new-creds",
+				"credentials": credJson,
 			},
 		}); err != nil {
 			t.Fatal(err)
@@ -139,7 +143,7 @@ func TestBackend_PathConfigUpdate(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if v, exp := config.Credentials, "new-creds"; v != exp {
+		if v, exp := config.Credentials, strings.TrimSpace(credJson); v != exp {
 			t.Errorf("expected %q to be %q", v, exp)
 		}
 
@@ -209,4 +213,21 @@ func TestBackend_PathConfigDelete(t *testing.T) {
 			t.Errorf("expected %v to be %v", config, def)
 		}
 	})
+}
+
+func getTestCredentials() ([]byte, error) {
+	creds := map[string]interface{}{
+		"client_email":   "testUser@google.com",
+		"client_id":      "user123",
+		"private_key_id": "privateKey123",
+		"private_key":    "iAmAPrivateKey",
+		"project_id":     "project123",
+	}
+
+	credJson, err := jsonutil.EncodeJSON(creds)
+	if err != nil {
+		return nil, err
+	}
+
+	return credJson, nil
 }
