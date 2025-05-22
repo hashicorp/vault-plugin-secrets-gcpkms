@@ -5,15 +5,24 @@ package gcpkms
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/hashicorp/errwrap"
+	"github.com/hashicorp/go-gcp-common/gcputil"
+	"github.com/hashicorp/go-secure-stdlib/strutil"
 	"github.com/hashicorp/vault/sdk/framework"
+	"github.com/hashicorp/vault/sdk/helper/automatedrotationutil"
+	"github.com/hashicorp/vault/sdk/helper/pluginidentityutil"
+	"github.com/hashicorp/vault/sdk/helper/pluginutil"
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
 // pathConfig defines the gcpkms/config base path on the backend.
 func (b *backend) pathConfig() *framework.Path {
-	return &framework.Path{
+
+	p := &framework.Path{
 		Pattern: "config",
 
 		DisplayAttrs: &framework.DisplayAttributes{
@@ -25,7 +34,7 @@ func (b *backend) pathConfig() *framework.Path {
 			"or manage the requested scope(s).",
 
 		Fields: map[string]*framework.FieldSchema{
-			"credentials": &framework.FieldSchema{
+			"credentials": {
 				Type: framework.TypeString,
 				Description: `
 The credentials to use for authenticating to Google Cloud. Leave this blank to
@@ -33,12 +42,16 @@ use the Default Application Credentials or instance metadata authentication.
 `,
 			},
 
-			"scopes": &framework.FieldSchema{
+			"scopes": {
 				Type: framework.TypeCommaStringSlice,
 				Description: `
 The list of full-URL scopes to request when authenticating. By default, this
 requests https://www.googleapis.com/auth/cloudkms.
 `,
+			},
+			"service_account_email": {
+				Type:        framework.TypeString,
+				Description: `Email ID for the Service Account to impersonate for Workload Identity Federation.`,
 			},
 		},
 
@@ -73,6 +86,9 @@ requests https://www.googleapis.com/auth/cloudkms.
 			},
 		},
 	}
+	pluginidentityutil.AddPluginIdentityTokenFields(p.Fields)
+	automatedrotationutil.AddAutomatedRotationFields(p.Fields)
+	return p
 }
 
 // pathConfigExists checks if the configuration exists.
@@ -95,10 +111,16 @@ func (b *backend) pathConfigRead(ctx context.Context, req *logical.Request, _ *f
 		return nil, err
 	}
 
+	configData := map[string]interface{}{
+		"scopes":                c.Scopes,
+		"service_account_email": c.ServiceAccountEmail,
+	}
+
+	c.PopulatePluginIdentityTokenData(configData)
+	c.PopulateAutomatedRotationData(configData)
+
 	return &logical.Response{
-		Data: map[string]interface{}{
-			"scopes": c.Scopes,
-		},
+		Data: configData,
 	}, nil
 }
 
@@ -111,23 +133,81 @@ func (b *backend) pathConfigWrite(ctx context.Context, req *logical.Request, d *
 		return nil, err
 	}
 
-	// Update the configuration
-	changed, err := c.Update(d)
-	if err != nil {
-		return nil, logical.CodedError(400, err.Error())
+	credentialsRaw, setNewCreds := d.GetOk("credentials")
+	if setNewCreds {
+		// If the credentials are set, we need to parse them if they are not empty in the case we switch back to Workload Identity
+		if len(strings.TrimSpace(credentialsRaw.(string))) > 0 {
+			_, err := gcputil.Credentials(credentialsRaw.(string))
+			if err != nil {
+				return logical.ErrorResponse(fmt.Sprintf("invalid credentials JSON file: %v", err)), nil
+			}
+		}
+		c.Credentials = strings.TrimSpace(credentialsRaw.(string))
 	}
 
+	if v, ok := d.GetOk("scopes"); ok {
+		nv := strutil.RemoveDuplicates(v.([]string), true)
+		if !strutil.EquivalentSlices(nv, c.Scopes) {
+			c.Scopes = nv
+			setNewCreds = true
+		}
+	}
+
+	// set plugin identity token fields
+	if err := c.ParsePluginIdentityTokenFields(d); err != nil {
+		return logical.ErrorResponse(err.Error()), nil
+	}
+
+	// set automated root rotation fields
+	if err := c.ParseAutomatedRotationFields(d); err != nil {
+		return logical.ErrorResponse(err.Error()), nil
+	}
+
+	// set Service Account email
+	saEmail, ok := d.GetOk("service_account_email")
+	if ok {
+		c.ServiceAccountEmail = saEmail.(string)
+		setNewCreds = true
+	}
+
+	if c.IdentityTokenAudience != "" && c.Credentials != "" {
+		return logical.ErrorResponse("only one of 'credentials' or 'identity_token_audience' can be set"), nil
+	}
+
+	if c.IdentityTokenAudience != "" && c.ServiceAccountEmail == "" {
+		return logical.ErrorResponse("missing required 'service_account_email' when 'identity_token_audience' is set"), nil
+	}
+
+	// generate token to check if WIF is enabled on this edition of Vault
+	if c.IdentityTokenAudience != "" {
+		_, err := b.System().GenerateIdentityToken(ctx, &pluginutil.IdentityTokenRequest{
+			Audience: c.IdentityTokenAudience,
+		})
+		if err != nil {
+			if errors.Is(err, pluginidentityutil.ErrPluginWorkloadIdentityUnsupported) {
+				return logical.ErrorResponse(err.Error()), nil
+			}
+			return nil, err
+		}
+	}
+
+	// if token audience or TTL is being updated, ensure cached credentials are cleared
+	_, audOk := d.GetOk("identity_token_audience")
+	_, ttlOk := d.GetOk("identity_token_ttl")
+	if audOk || ttlOk {
+		setNewCreds = true
+	}
 	// Only do the following if the config is different
-	if changed {
+	if setNewCreds {
 		// Generate a new storage entry
 		entry, err := logical.StorageEntryJSON("config", c)
 		if err != nil {
-			return nil, errwrap.Wrapf("failed to generate JSON configuration: {{err}}", err)
+			return nil, err
 		}
 
 		// Save the storage entry
 		if err := req.Storage.Put(ctx, entry); err != nil {
-			return nil, errwrap.Wrapf("failed to persist configuration to storage: {{err}}", err)
+			return nil, fmt.Errorf("failed to persist configuration to storage: %s", err)
 		}
 
 		// Invalidate existing client so it reads the new configuration
