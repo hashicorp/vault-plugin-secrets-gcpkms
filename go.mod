@@ -1,8 +1,8 @@
 module github.com/hashicorp/vault-plugin-secrets-gcpkms
 
-go 1.22
+go 1.23.0
 
-toolchain go1.22.3
+toolchain go1.24.3
 
 require (
 	cloud.google.com/go/kms v1.20.1
@@ -97,7 +97,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.29.0 // indirect
 	go.opentelemetry.io/otel/trace v1.29.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/crypto v0.33.0 // indirect
+	golang.org/x/crypto v0.35.0 // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/net v0.35.0 // indirect
 	golang.org/x/sync v0.11.0 // indirect
