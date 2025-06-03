@@ -11,6 +11,9 @@
   * `google.golang.org/genproto` v0.0.0-20241021214115-324edc3d5d38 -> v0.0.0-20250528174236-200df99c418a
   * `google.golang.org/grpc` v1.67.1 -> v1.72.2
 
+## v0.20.0 (Feb 13th, 2025)
+* Go version: 1.22.3 -> 1.23.6
+
 ## v0.19.0 (Feb 12th, 2025)
 * Updated dependencies:
   * https://github.com/hashicorp/vault-plugin-secrets-gcpkms/pull/58
