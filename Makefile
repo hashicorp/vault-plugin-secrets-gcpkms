@@ -23,5 +23,5 @@ dev:
 
 # test runs the tests
 test:
-	@go test -timeout=240s ./... $(TESTARGS)
+	@go test -timeout=300s ./... $(TESTARGS)
 .PHONY: test

@@ -9,6 +9,7 @@ require (
 	github.com/gammazero/workerpool v1.1.3
 	github.com/golang/protobuf v1.5.4
 	github.com/hashicorp/errwrap v1.1.0
+	github.com/hashicorp/go-gcp-common v0.9.2
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2
