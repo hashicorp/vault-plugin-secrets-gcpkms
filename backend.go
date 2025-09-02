@@ -9,12 +9,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hashicorp/errwrap"
+	"github.com/hashicorp/go-gcp-common/gcputil"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/vault/sdk/framework"
+	"github.com/hashicorp/vault/sdk/helper/pluginutil"
 	"github.com/hashicorp/vault/sdk/helper/useragent"
 	"github.com/hashicorp/vault/sdk/logical"
 	"github.com/patrickmn/go-cache"
 	"golang.org/x/oauth2/google"
+	"golang.org/x/oauth2/google/externalaccount"
 	"google.golang.org/api/option"
 
 	kmsapi "cloud.google.com/go/kms/apiv1"
@@ -182,20 +185,32 @@ func (b *backend) KMSClient(s logical.Storage) (*kmsapi.KeyManagementClient, fun
 		return nil, nil, err
 	}
 
-	// If credentials were provided, use those. Otherwise fall back to the
-	// default application credentials.
+	// If credentials were provided or workload identiy, use those.
+	// Otherwise fall back to the default application credentials.
 	var creds *google.Credentials
 	if config.Credentials != "" {
 		creds, err = google.CredentialsFromJSON(b.ctx, []byte(config.Credentials), config.Scopes...)
 		if err != nil {
 			b.kmsClientLock.Unlock()
-			return nil, nil, errwrap.Wrapf("failed to parse credentials: {{err}}", err)
+			return nil, nil, fmt.Errorf("failed to parse credentials: %w", err)
+		}
+	} else if config.IdentityTokenAudience != "" {
+		ts := &PluginIdentityTokenSupplier{
+			sys:      b.System(),
+			logger:   b.Logger(),
+			audience: config.IdentityTokenAudience,
+			ttl:      config.IdentityTokenTTL,
+		}
+
+		creds, err = b.GetExternalAccountConfig(config, ts).GetExternalAccountCredentials(b.ctx)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to fetch external account credentials: %w", err)
 		}
 	} else {
 		creds, err = google.FindDefaultCredentials(b.ctx, config.Scopes...)
 		if err != nil {
 			b.kmsClientLock.Unlock()
-			return nil, nil, errwrap.Wrapf("failed to get default token source: {{err}}", err)
+			return nil, nil, fmt.Errorf("failed to get default token source: %w", err)
 		}
 	}
 
@@ -207,7 +222,7 @@ func (b *backend) KMSClient(s logical.Storage) (*kmsapi.KeyManagementClient, fun
 	)
 	if err != nil {
 		b.kmsClientLock.Unlock()
-		return nil, nil, errwrap.Wrapf("failed to create KMS client: {{err}}", err)
+		return nil, nil, fmt.Errorf("failed to create KMS client: %w", err)
 	}
 
 	// Cache the client
@@ -228,14 +243,53 @@ func (b *backend) Config(ctx context.Context, s logical.Storage) (*Config, error
 
 	entry, err := s.Get(ctx, "config")
 	if err != nil {
-		return nil, errwrap.Wrapf("failed to get configuration from storage: {{err}}", err)
+		return nil, fmt.Errorf("failed to get configuration from storage: %w", err)
 	}
 	if entry == nil || len(entry.Value) == 0 {
 		return c, nil
 	}
 
 	if err := entry.DecodeJSON(&c); err != nil {
-		return nil, errwrap.Wrapf("failed to decode configuration: {{err}}", err)
+		return nil, fmt.Errorf("failed to decode configuration: %w", err)
 	}
 	return c, nil
+}
+
+func (b *backend) GetExternalAccountConfig(c *Config, ts *PluginIdentityTokenSupplier) *gcputil.ExternalAccountConfig {
+	b.Logger().Debug("adding web identity token fetcher")
+	cfg := &gcputil.ExternalAccountConfig{
+		ServiceAccountEmail: c.ServiceAccountEmail,
+		Audience:            c.IdentityTokenAudience,
+		TTL:                 c.IdentityTokenTTL,
+		TokenSupplier:       ts,
+	}
+
+	return cfg
+}
+
+type PluginIdentityTokenSupplier struct {
+	sys      logical.SystemView
+	logger   hclog.Logger
+	audience string
+	ttl      time.Duration
+}
+
+var _ externalaccount.SubjectTokenSupplier = (*PluginIdentityTokenSupplier)(nil)
+
+func (p *PluginIdentityTokenSupplier) SubjectToken(ctx context.Context, opts externalaccount.SupplierOptions) (string, error) {
+	p.logger.Info("fetching new plugin identity token")
+	resp, err := p.sys.GenerateIdentityToken(ctx, &pluginutil.IdentityTokenRequest{
+		Audience: p.audience,
+		TTL:      p.ttl,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to generate plugin identity token: %w", err)
+	}
+
+	if resp.TTL < p.ttl {
+		p.logger.Debug("generated plugin identity token has shorter TTL than requested",
+			"requested", p.ttl.Seconds(), "actual", resp.TTL)
+	}
+
+	return resp.Token.Token(), nil
 }
