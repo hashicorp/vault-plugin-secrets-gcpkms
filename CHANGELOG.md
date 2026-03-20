@@ -1,7 +1,8 @@
 ## v0.23.0
-### March 18, 2026
+### March 20, 2026
 
 IMPROVEMENTS:
+* Automated dependency upgrades (#80)
 * Updated dependencies (#83): 
   * go 1.25.1 => 1.26.1
   * github.com/hashicorp/vault/api v01.21.0 => v1.22.0
