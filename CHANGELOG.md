@@ -1,6 +1,16 @@
 ## v0.23.0
 ### March 20, 2026
 
+* update v0.23.0 release changelog (#84)
+* Automated dependency upgrades (#80)
+* Prepare v0.23.0 release (#83)
+* [COMPLIANCE] Update Copyright and License Headers (#82)
+* chore: remove changie (#79)
+* Update changelog for v0.22.0 release (#78)
+
+## v0.23.0
+### March 20, 2026
+
 IMPROVEMENTS:
 * Automated dependency upgrades (#80)
 * Updated dependencies (#83): 
