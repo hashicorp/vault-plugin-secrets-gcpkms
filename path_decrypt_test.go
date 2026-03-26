@@ -15,12 +15,12 @@ import (
 	"testing"
 
 	"github.com/hashicorp/vault/sdk/logical"
+	"github.com/stretchr/testify/require"
 
 	kmspb "google.golang.org/genproto/googleapis/cloud/kms/v1"
 )
 
 func TestPathDecrypt_Write(t *testing.T) {
-
 	t.Run("field_validation", func(t *testing.T) {
 		testFieldValidation(t, logical.UpdateOperation, "decrypt/my-key")
 	})
@@ -99,6 +99,8 @@ func TestPathDecrypt_Write(t *testing.T) {
 				if v := resp.Data["plaintext"]; v != exp {
 					t.Errorf("expected %q to be %q", v, exp)
 				}
+
+				require.Equal(t, uint64(1), b.billingDataCounts.Load())
 			})
 		}
 	})
@@ -164,6 +166,8 @@ func TestPathDecrypt_Write(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
+
+				require.Equal(t, uint64(1), b.billingDataCounts.Load())
 
 				if v, exp := resp.Data["plaintext"], tc.exp; v != exp {
 					t.Errorf("expected %q to be %q", v, exp)

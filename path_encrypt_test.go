@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/vault/sdk/logical"
+	"github.com/stretchr/testify/require"
 
 	kmspb "google.golang.org/genproto/googleapis/cloud/kms/v1"
 )
@@ -61,6 +62,7 @@ func TestPathEncrypt_Write(t *testing.T) {
 	}
 
 	t.Run("group", func(t *testing.T) {
+		expectedBillingCount := uint64(0)
 		for _, tc := range cases {
 			tc := tc
 
@@ -106,6 +108,10 @@ func TestPathEncrypt_Write(t *testing.T) {
 				if v, exp := string(decryptResp.Plaintext), tc.pt; v != exp {
 					t.Errorf("expected %q to be %q", v, exp)
 				}
+
+				// Verify billing data count incremented
+				expectedBillingCount++
+				require.Equal(t, expectedBillingCount, b.billingDataCounts.Load())
 			})
 		}
 	})

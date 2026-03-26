@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/vault/sdk/logical"
+	"github.com/stretchr/testify/require"
 
 	kmspb "google.golang.org/genproto/googleapis/cloud/kms/v1"
 )
@@ -157,6 +158,9 @@ func TestPathSign_Write(t *testing.T) {
 				default:
 					t.Fatalf("unknown algorithm: %s", pk.Algorithm)
 				}
+
+				// Verify billing data count incremented
+				require.Equal(t, uint64(1), b.billingDataCounts.Load())
 			})
 		}
 	})
