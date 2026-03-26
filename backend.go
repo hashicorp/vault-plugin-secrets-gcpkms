@@ -60,8 +60,7 @@ type backend struct {
 	ctxCancel context.CancelFunc
 	ctxLock   sync.Mutex
 
-	// billingDataCounts tracks the number of data protection operations for billing purposes.
-	// This counter is also used in tests to verify billing data tracking.
+	// For testing purposes only. Used to track the number of billing data requests.
 	billingDataCounts atomic.Uint64
 }
 
