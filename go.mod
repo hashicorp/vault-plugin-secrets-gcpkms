@@ -15,6 +15,7 @@ require (
 	github.com/jeffchao/backoff v0.0.0-20140404060208-9d7fd7aa17f2
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/satori/go.uuid v1.2.0
+	github.com/stretchr/testify v1.11.1
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/api v0.272.0
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7
@@ -105,7 +106,6 @@ require (
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.5 // indirect
-	github.com/stretchr/testify v1.11.1 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.61.0 // indirect
