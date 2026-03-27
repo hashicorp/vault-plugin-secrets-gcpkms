@@ -100,6 +100,7 @@ func TestPathDecrypt_Write(t *testing.T) {
 					t.Errorf("expected %q to be %q", v, exp)
 				}
 
+				// Verify billing data count incremented
 				require.Equal(t, uint64(1), b.billingDataCounts.Load())
 			})
 		}
