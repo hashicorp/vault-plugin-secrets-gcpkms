@@ -169,7 +169,7 @@ func (b *backend) pathDecryptWrite(ctx context.Context, req *logical.Request, d 
 		return nil, logical.ErrUnsupportedOperation
 	}
 
-    // successful request, increment billing count. 
+	// successful request, increment billing count
 	if err := b.incrementBillingDataCount(ctx, 1); err != nil {
 		b.Logger().Error("failed to write GCP KMS decryption billing data", "error", err)
 	}
