@@ -120,6 +120,7 @@ func (b *backend) pathEncryptWrite(ctx context.Context, req *logical.Request, d 
 		return nil, errwrap.Wrapf("failed to encrypt plaintext: {{err}}", err)
 	}
 
+   // successful request, increment billing count. 
 	if err := b.incrementBillingDataCount(ctx, 1); err != nil {
 		b.Logger().Error("failed to write GCP KMS encryption billing data", "error", err)
 	}
