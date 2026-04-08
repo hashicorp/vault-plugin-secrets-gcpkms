@@ -128,12 +128,9 @@ func (b *backend) incrementBillingDataCount(ctx context.Context, count uint64) e
 	b.billingDataCounts.Add(count)
 
 	// Write billing data to the consumption billing manager
-	if b.ConsumptionBillingManager != nil {
-		return b.ConsumptionBillingManager.WriteBillingData(ctx, "gcpkms", map[string]interface{}{
-			"count": count,
-		})
-	}
-	return nil
+	return b.ConsumptionBillingManager.WriteBillingData(ctx, "gcpkms", map[string]interface{}{
+		"count": count,
+	})
 }
 
 // clean cancels the shared contexts. This is called just before unmounting
