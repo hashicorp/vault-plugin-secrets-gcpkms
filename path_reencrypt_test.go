@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/vault/sdk/logical"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPathReencrypt_Write(t *testing.T) {
@@ -145,6 +146,9 @@ func TestPathReencrypt_Write(t *testing.T) {
 			if ciphertextV1 == ciphertextV2 {
 				t.Errorf("not reencrypted")
 			}
+
+			// Verify billing data count incremented (1 encrypt + 1 reencrypt)
+			require.Equal(t, uint64(2), b.billingDataCounts.Load())
 		})
 
 		t.Run("less_min_version", func(t *testing.T) {

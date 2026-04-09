@@ -152,6 +152,11 @@ func (b *backend) pathSignWrite(ctx context.Context, req *logical.Request, d *fr
 		return nil, errwrap.Wrapf("failed to sign digest: {{err}}", err)
 	}
 
+	// successful request, increment billing count
+	if err := b.incrementBillingDataCount(ctx, 1); err != nil {
+		b.Logger().Error("failed to write GCP KMS signing billing data", "error", err)
+	}
+
 	return &logical.Response{
 		Data: map[string]interface{}{
 			"signature": base64.StdEncoding.EncodeToString(resp.Signature),

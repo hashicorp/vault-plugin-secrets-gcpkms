@@ -133,6 +133,11 @@ func (b *backend) pathReencryptWrite(ctx context.Context, req *logical.Request, 
 		return nil, errwrap.Wrapf("failed to encrypt new plaintext: {{err}}", err)
 	}
 
+	// successful request, increment billing count
+	if err := b.incrementBillingDataCount(ctx, 1); err != nil {
+		b.Logger().Error("failed to write GCP KMS reencryption billing data", "error", err)
+	}
+
 	return &logical.Response{
 		Data: map[string]interface{}{
 			"key_version": path.Base(encResp.Name),

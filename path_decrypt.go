@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
@@ -166,6 +167,11 @@ func (b *backend) pathDecryptWrite(ctx context.Context, req *logical.Request, d 
 		plaintext = string(resp.Plaintext)
 	case kmspb.CryptoKey_ASYMMETRIC_SIGN:
 		return nil, logical.ErrUnsupportedOperation
+	}
+
+	// successful request, increment billing count
+	if err := b.incrementBillingDataCount(ctx, 1); err != nil {
+		b.Logger().Error("failed to write GCP KMS decryption billing data", "error", err)
 	}
 
 	return &logical.Response{

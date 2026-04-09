@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/hashicorp/errwrap"
@@ -58,6 +59,9 @@ type backend struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 	ctxLock   sync.Mutex
+
+	// For testing purposes only. Used to track the number of billing data requests.
+	billingDataCounts atomic.Uint64
 }
 
 // Factory returns a configured instance of the backend.
@@ -117,6 +121,16 @@ func (b *backend) initialize(ctx context.Context, _ *logical.InitializationReque
 	b.pluginEnv = pluginEnv
 
 	return nil
+}
+
+func (b *backend) incrementBillingDataCount(ctx context.Context, count uint64) error {
+	// Increment the billing data count for testing
+	b.billingDataCounts.Add(count)
+
+	// Write billing data to the consumption billing manager
+	return b.ConsumptionBillingManager.WriteBillingData(ctx, "gcpkms", map[string]interface{}{
+		"count": count,
+	})
 }
 
 // clean cancels the shared contexts. This is called just before unmounting

@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/vault/sdk/logical"
+	"github.com/stretchr/testify/require"
 
 	kmspb "google.golang.org/genproto/googleapis/cloud/kms/v1"
 )
@@ -119,6 +120,9 @@ func TestPathVerify_Write(t *testing.T) {
 				if b, ok := valid.(bool); !ok || !b {
 					t.Errorf("expected valid %t to be %t", b, true)
 				}
+
+				// Verify billing data count incremented
+				require.Equal(t, uint64(1), b.billingDataCounts.Load())
 			})
 		}
 	})

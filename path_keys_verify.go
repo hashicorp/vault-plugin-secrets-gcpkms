@@ -182,6 +182,11 @@ func (b *backend) pathVerifyWrite(ctx context.Context, req *logical.Request, d *
 		return nil, fmt.Errorf("unknown key signing algorithm: %s", pk.Algorithm)
 	}
 
+	// successful request, increment billing count
+	if err := b.incrementBillingDataCount(ctx, 1); err != nil {
+		b.Logger().Error("failed to write GCP KMS verification billing data", "error", err)
+	}
+
 	return &logical.Response{
 		Data: map[string]interface{}{
 			"valid": validSig,
