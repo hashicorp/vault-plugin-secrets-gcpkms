@@ -13,19 +13,13 @@ import (
 )
 
 func main() {
-	logger := hclog.New(&hclog.LoggerOptions{})
-
-	defer func() {
-		if r := recover(); r != nil {
-			logger.Error("plugin paniced", "error", r)
-			os.Exit(1)
-		}
-	}()
 
 	meta := &api.PluginAPIClientMeta{}
-
 	flags := meta.FlagSet()
-	flags.Parse(os.Args[1:])
+
+	if err := flags.Parse(os.Args[1:]); err != nil {
+		fatal(err)
+	}
 
 	tlsConfig := meta.GetTLSConfig()
 	tlsProviderFunc := api.VaultPluginTLSProvider(tlsConfig)
@@ -36,7 +30,12 @@ func main() {
 		// compatibility with Vault versions that don’t support plugin AutoMTLS
 		TLSProviderFunc: tlsProviderFunc,
 	}); err != nil {
-		logger.Error("plugin shutting down", "error", err)
-		os.Exit(1)
+		fatal(err)
 	}
+}
+
+func fatal(err error) {
+	logger := hclog.New(&hclog.LoggerOptions{})
+	logger.Error("plugin shutting down", "error", err)
+	os.Exit(1)
 }
