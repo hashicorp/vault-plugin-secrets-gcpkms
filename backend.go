@@ -60,13 +60,17 @@ type backend struct {
 	ctxCancel context.CancelFunc
 	ctxLock   sync.Mutex
 
+	// backendUUID is a stable identifier unique to this backend instance,
+	// sourced from logical.BackendConfig at setup time.
+	backendUUID string
+
 	// For testing purposes only. Used to track the number of billing data requests.
 	billingDataCounts atomic.Uint64
 }
 
 // Factory returns a configured instance of the backend.
 func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, error) {
-	b := Backend()
+	b := Backend(c)
 	if err := b.Setup(ctx, c); err != nil {
 		return nil, err
 	}
@@ -74,9 +78,10 @@ func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, er
 }
 
 // Backend returns a configured instance of the backend.
-func Backend() *backend {
+func Backend(conf *logical.BackendConfig) *backend {
 	var b backend
 
+	b.backendUUID = conf.BackendUUID
 	b.kmsClientLifetime = defaultClientLifetime
 	b.ctx, b.ctxCancel = context.WithCancel(context.Background())
 	b.keysCache = cache.New(cache.DefaultExpiration, 60*time.Minute)
@@ -123,13 +128,29 @@ func (b *backend) initialize(ctx context.Context, _ *logical.InitializationReque
 	return nil
 }
 
-func (b *backend) incrementBillingDataCount(ctx context.Context, count uint64) error {
-	// Increment the billing data count for testing
+func (b *backend) incrementBillingDataCount(ctx context.Context, req *logical.Request, count uint64) error {
+	// Get mount information from request
+	mountPath := ""
+	mountAccessor := ""
+	mountType := ""
+	if req != nil {
+		mountPath = req.MountPoint
+		mountAccessor = req.MountAccessor
+		mountType = req.MountType
+	}
+
+	// Update in-process counter used for unit-test assertions.
 	b.billingDataCounts.Add(count)
 
-	// Write billing data to the consumption billing manager
+	// Forward the count and mount context to the Vault billing manager.
+	// Namespace is resolved server-side from ctx inside AccumulateGcpKmsAttribution,
+	// since helper/namespace is unavailable to external plugins.
 	return b.ConsumptionBillingManager.WriteBillingData(ctx, "gcpkms", map[string]interface{}{
-		"count": count,
+		"count":            count,
+		"mountAccessor":    mountAccessor,
+		"mountPath":        mountPath,
+		"mountType":        mountType,
+		"backendAwareUUID": b.backendUUID,
 	})
 }
 
