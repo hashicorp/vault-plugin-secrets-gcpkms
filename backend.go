@@ -62,6 +62,10 @@ type backend struct {
 
 	// For testing purposes only. Used to track the number of billing data requests.
 	billingDataCounts atomic.Uint64
+
+	billingDataAttribution map[string]logical.MountAttribution
+
+	backendUUID string
 }
 
 // Factory returns a configured instance of the backend.
@@ -70,6 +74,7 @@ func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, er
 	if err := b.Setup(ctx, c); err != nil {
 		return nil, err
 	}
+	b.backendUUID = c.BackendUUID
 	return b, nil
 }
 
@@ -80,6 +85,7 @@ func Backend() *backend {
 	b.kmsClientLifetime = defaultClientLifetime
 	b.ctx, b.ctxCancel = context.WithCancel(context.Background())
 	b.keysCache = cache.New(cache.DefaultExpiration, 60*time.Minute)
+	b.billingDataAttribution = make(map[string]logical.MountAttribution)
 
 	b.Backend = &framework.Backend{
 		BackendType: logical.TypeLogical,
@@ -123,13 +129,55 @@ func (b *backend) initialize(ctx context.Context, _ *logical.InitializationReque
 	return nil
 }
 
-func (b *backend) incrementBillingDataCount(ctx context.Context, count uint64) error {
+// accumulateGcpkmsAttributions upserts mount attribution data keyed by mountAccessor.- just for testing
+func (b *backend) accumulateGcpkmsAttributions(req *logical.Request, count uint64) error {
+	if req.MountAccessor == "" {
+		return fmt.Errorf("mountAccessor cannot be empty")
+	}
+
+	var prev uint64
+	if existing, exists := b.billingDataAttribution[req.MountAccessor]; exists {
+		if n, ok := existing.Count.(uint64); ok {
+			prev = n
+		}
+	}
+	b.billingDataAttribution[req.MountAccessor] = logical.MountAttribution{
+		MountPath:        req.MountPoint,
+		MountAccessor:    req.MountAccessor,
+		MountType:        req.MountType,
+		BackendAwareUUID: b.backendUUID,
+		Count:            prev + count,
+	}
+
+	return nil
+}
+
+func (b *backend) incrementBillingDataCount(ctx context.Context, req *logical.Request, count uint64) error {
 	// Increment the billing data count for testing
+	mountPath := ""
+	mountAccessor := ""
+	mountType := ""
+	if req != nil {
+		mountPath = req.MountPoint
+		mountAccessor = req.MountAccessor
+		mountType = req.MountType
+		if err := b.accumulateGcpkmsAttributions(req, count); err != nil {
+			b.Logger().Debug("Could not track attribution: mountAcessor is empty string.")
+			return b.ConsumptionBillingManager.WriteBillingData(ctx, "gcpkms", map[string]interface{}{
+				"count": count,
+			})
+		}
+	}
+	//increment the billing data count for testing
 	b.billingDataCounts.Add(count)
 
 	// Write billing data to the consumption billing manager
 	return b.ConsumptionBillingManager.WriteBillingData(ctx, "gcpkms", map[string]interface{}{
-		"count": count,
+		"count":            count,
+		"mountAccessor":    mountAccessor,
+		"mountPath":        mountPath,
+		"mountType":        mountType,
+		"backendAwareUUID": b.backendUUID,
 	})
 }
 
