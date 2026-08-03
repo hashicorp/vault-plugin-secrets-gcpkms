@@ -16,7 +16,7 @@ func verifyGcpkmsAttribution(t *testing.T, b *backend, mountAccessor, mountPath 
 	attribution, ok := b.billingDataAttribution[mountAccessor]
 
 	require.True(t, ok, "Expected GcpkmsAttribution to contain entry for %s", mountAccessor)
-	require.Equal(t, float64(expectedCount), attribution.Count, "count mismatch")
+	require.Equal(t, uint64(expectedCount), attribution.Count, "count mismatch")
 	require.Equal(t, mountPath, attribution.MountPath, "mountPath mismatch")
 	require.Equal(t, mountAccessor, attribution.MountAccessor, "mountAccessor mismatch")
 }

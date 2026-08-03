@@ -80,9 +80,11 @@ func TestPathSign_Write(t *testing.T) {
 
 				// Now sign it
 				resp, err := b.HandleRequest(ctx, &logical.Request{
-					Storage:   storage,
-					Operation: logical.UpdateOperation,
-					Path:      "sign/my-key",
+					Storage:       storage,
+					Operation:     logical.UpdateOperation,
+					Path:          "sign/my-key",
+					MountAccessor: "auth_abc123",
+					MountPoint:    "gcpkms/",
 					Data: map[string]interface{}{
 						"digest":      base64.StdEncoding.EncodeToString(digest),
 						"key_version": 1,
@@ -159,8 +161,9 @@ func TestPathSign_Write(t *testing.T) {
 					t.Fatalf("unknown algorithm: %s", pk.Algorithm)
 				}
 
-				// Verify billing data count incremented
+				// Verify billing data count and attribution
 				require.Equal(t, uint64(1), b.billingDataCounts.Load())
+				verifyGcpkmsAttribution(t, b, "auth_abc123", "gcpkms/", 1)
 			})
 		}
 	})

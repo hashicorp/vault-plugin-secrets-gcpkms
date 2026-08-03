@@ -163,9 +163,6 @@ func (b *backend) incrementBillingDataCount(ctx context.Context, req *logical.Re
 		mountType = req.MountType
 		if err := b.accumulateGcpkmsAttributions(req, count); err != nil {
 			b.Logger().Debug("Could not track attribution: mountAcessor is empty string.")
-			return b.ConsumptionBillingManager.WriteBillingData(ctx, "gcpkms", map[string]interface{}{
-				"count": count,
-			})
 		}
 	}
 	//increment the billing data count for testing

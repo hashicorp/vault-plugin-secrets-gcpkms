@@ -70,9 +70,11 @@ func TestPathEncrypt_Write(t *testing.T) {
 
 				ctx := context.Background()
 				resp, err := b.HandleRequest(ctx, &logical.Request{
-					Storage:   storage,
-					Operation: logical.UpdateOperation,
-					Path:      "encrypt/my-key",
+					Storage:       storage,
+					Operation:     logical.UpdateOperation,
+					Path:          "encrypt/my-key",
+					MountAccessor: "auth_abc123",
+					MountPoint:    "gcpkms/",
 					Data: map[string]interface{}{
 						"additional_authenticated_data": tc.aad,
 						"plaintext":                     tc.pt,
@@ -109,9 +111,10 @@ func TestPathEncrypt_Write(t *testing.T) {
 					t.Errorf("expected %q to be %q", v, exp)
 				}
 
-				// Verify billing data count incremented
+				// Verify billing data count and attribution
 				expectedBillingCount++
 				require.Equal(t, expectedBillingCount, b.billingDataCounts.Load())
+				verifyGcpkmsAttribution(t, b, "auth_abc123", "gcpkms/", expectedBillingCount)
 			})
 		}
 	})
@@ -120,9 +123,11 @@ func TestPathEncrypt_Write(t *testing.T) {
 
 		ctx := context.Background()
 		_, err := b.HandleRequest(ctx, &logical.Request{
-			Storage:   storage,
-			Operation: logical.UpdateOperation,
-			Path:      "encrypt/my-versioned-key",
+			Storage:       storage,
+			Operation:     logical.UpdateOperation,
+			Path:          "encrypt/my-versioned-key",
+			MountAccessor: "auth_abc123",
+			MountPoint:    "gcpkms/",
 			Data: map[string]interface{}{
 				"plaintext":   "hello world",
 				"key_version": 2,
@@ -131,15 +136,20 @@ func TestPathEncrypt_Write(t *testing.T) {
 		if err != logical.ErrPermissionDenied {
 			t.Errorf("expected %q to be %q", err, logical.ErrPermissionDenied)
 		}
+		// Failed request — no billing count or attribution should be recorded
+		require.Equal(t, uint64(0), b.billingDataCounts.Load())
+		verifyNoGcpkmsAttribution(t, b, "auth_abc123")
 	})
 
 	t.Run("greater_max_version", func(t *testing.T) {
 
 		ctx := context.Background()
 		_, err := b.HandleRequest(ctx, &logical.Request{
-			Storage:   storage,
-			Operation: logical.UpdateOperation,
-			Path:      "encrypt/my-versioned-key",
+			Storage:       storage,
+			Operation:     logical.UpdateOperation,
+			Path:          "encrypt/my-versioned-key",
+			MountAccessor: "auth_abc123",
+			MountPoint:    "gcpkms/",
 			Data: map[string]interface{}{
 				"plaintext":   "hello world",
 				"key_version": 7,
@@ -148,5 +158,8 @@ func TestPathEncrypt_Write(t *testing.T) {
 		if err != logical.ErrPermissionDenied {
 			t.Errorf("expected %q to be %q", err, logical.ErrPermissionDenied)
 		}
+		// Failed request — no billing count or attribution should be recorded
+		require.Equal(t, uint64(0), b.billingDataCounts.Load())
+		verifyNoGcpkmsAttribution(t, b, "auth_abc123")
 	})
 }

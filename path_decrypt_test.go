@@ -84,9 +84,11 @@ func TestPathDecrypt_Write(t *testing.T) {
 
 				// Now decrypt it
 				resp, err := b.HandleRequest(ctx, &logical.Request{
-					Storage:   storage,
-					Operation: logical.UpdateOperation,
-					Path:      "decrypt/my-key",
+					Storage:       storage,
+					Operation:     logical.UpdateOperation,
+					Path:          "decrypt/my-key",
+					MountAccessor: "auth_abc123",
+					MountPoint:    "gcpkms/",
 					Data: map[string]interface{}{
 						"ciphertext":  base64.StdEncoding.EncodeToString(enc),
 						"key_version": 1,
@@ -95,13 +97,14 @@ func TestPathDecrypt_Write(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-
+	
 				if v := resp.Data["plaintext"]; v != exp {
 					t.Errorf("expected %q to be %q", v, exp)
 				}
-
-				// Verify billing data count incremented
+	
+				// Verify billing data count and attribution
 				require.Equal(t, uint64(1), b.billingDataCounts.Load())
+				verifyGcpkmsAttribution(t, b, "auth_abc123", "gcpkms/", 1)
 			})
 		}
 	})
@@ -156,9 +159,11 @@ func TestPathDecrypt_Write(t *testing.T) {
 
 				// Now decrypt it
 				resp, err := b.HandleRequest(ctx, &logical.Request{
-					Storage:   storage,
-					Operation: logical.UpdateOperation,
-					Path:      "decrypt/my-key",
+					Storage:       storage,
+					Operation:     logical.UpdateOperation,
+					Path:          "decrypt/my-key",
+					MountAccessor: "auth_abc123",
+					MountPoint:    "gcpkms/",
 					Data: map[string]interface{}{
 						"additional_authenticated_data": tc.aad,
 						"ciphertext":                    base64.StdEncoding.EncodeToString(encryptResp.Ciphertext),
@@ -167,9 +172,10 @@ func TestPathDecrypt_Write(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-
+	
 				require.Equal(t, uint64(1), b.billingDataCounts.Load())
-
+				verifyGcpkmsAttribution(t, b, "auth_abc123", "gcpkms/", 1)
+	
 				if v, exp := resp.Data["plaintext"], tc.exp; v != exp {
 					t.Errorf("expected %q to be %q", v, exp)
 				}
