@@ -26,7 +26,6 @@ func TestPathDecrypt_Write(t *testing.T) {
 	})
 
 	t.Run("asymmetric", func(t *testing.T) {
-
 		algorithms := []kmspb.CryptoKeyVersion_CryptoKeyVersionAlgorithm{
 			kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_2048_SHA256,
 			kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_3072_SHA256,
@@ -38,7 +37,6 @@ func TestPathDecrypt_Write(t *testing.T) {
 			name := strings.ToLower(algo.String())
 
 			t.Run(name, func(t *testing.T) {
-
 				cryptoKey, cleanup := testCreateKMSCryptoKeyAsymmetricDecrypt(t, algo)
 				defer cleanup()
 
@@ -97,11 +95,11 @@ func TestPathDecrypt_Write(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-	
+
 				if v := resp.Data["plaintext"]; v != exp {
 					t.Errorf("expected %q to be %q", v, exp)
 				}
-	
+
 				// Verify billing data count and attribution
 				require.Equal(t, uint64(1), b.billingDataCounts.Load())
 				verifyGcpkmsAttribution(t, b, "auth_abc123", "gcpkms/", 1)
@@ -110,7 +108,6 @@ func TestPathDecrypt_Write(t *testing.T) {
 	})
 
 	t.Run("symmetric", func(t *testing.T) {
-
 		cases := []struct {
 			name string
 			aad  string
@@ -132,7 +129,6 @@ func TestPathDecrypt_Write(t *testing.T) {
 			tc := tc
 
 			t.Run(tc.name, func(t *testing.T) {
-
 				cryptoKey, cleanup := testCreateKMSCryptoKeySymmetric(t)
 				defer cleanup()
 
@@ -172,10 +168,10 @@ func TestPathDecrypt_Write(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-	
+
 				require.Equal(t, uint64(1), b.billingDataCounts.Load())
 				verifyGcpkmsAttribution(t, b, "auth_abc123", "gcpkms/", 1)
-	
+
 				if v, exp := resp.Data["plaintext"], tc.exp; v != exp {
 					t.Errorf("expected %q to be %q", v, exp)
 				}
