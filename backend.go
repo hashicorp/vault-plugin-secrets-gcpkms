@@ -131,9 +131,6 @@ func (b *backend) initialize(ctx context.Context, _ *logical.InitializationReque
 
 // accumulateGcpkmsAttributions upserts mount attribution data keyed by mountAccessor.- just for testing
 func (b *backend) accumulateGcpkmsAttributions(req *logical.Request, count uint64) error {
-	if req.MountAccessor == "" {
-		return fmt.Errorf("mountAccessor cannot be empty")
-	}
 
 	var prev uint64
 	if existing, exists := b.billingDataAttribution[req.MountAccessor]; exists {
