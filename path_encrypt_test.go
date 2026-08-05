@@ -120,13 +120,13 @@ func TestPathEncrypt_Write(t *testing.T) {
 	})
 
 	t.Run("less_min_version", func(t *testing.T) {
-
+		countBefore := b.billingDataCounts.Load()
 		ctx := context.Background()
 		_, err := b.HandleRequest(ctx, &logical.Request{
 			Storage:       storage,
 			Operation:     logical.UpdateOperation,
 			Path:          "encrypt/my-versioned-key",
-			MountAccessor: "auth_abc123",
+			MountAccessor: "auth_versioned",
 			MountPoint:    "gcpkms/",
 			Data: map[string]interface{}{
 				"plaintext":   "hello world",
@@ -136,19 +136,19 @@ func TestPathEncrypt_Write(t *testing.T) {
 		if err != logical.ErrPermissionDenied {
 			t.Errorf("expected %q to be %q", err, logical.ErrPermissionDenied)
 		}
-		// Failed request — no billing count or attribution should be recorded
-		require.Equal(t, uint64(0), b.billingDataCounts.Load())
-		verifyNoGcpkmsAttribution(t, b, "auth_abc123")
+		// Failed request — count must not increase; no attribution for this accessor
+		require.Equal(t, countBefore, b.billingDataCounts.Load())
+		verifyNoGcpkmsAttribution(t, b, "auth_versioned")
 	})
 
 	t.Run("greater_max_version", func(t *testing.T) {
-
+		countBefore := b.billingDataCounts.Load()
 		ctx := context.Background()
 		_, err := b.HandleRequest(ctx, &logical.Request{
 			Storage:       storage,
 			Operation:     logical.UpdateOperation,
 			Path:          "encrypt/my-versioned-key",
-			MountAccessor: "auth_abc123",
+			MountAccessor: "auth_versioned",
 			MountPoint:    "gcpkms/",
 			Data: map[string]interface{}{
 				"plaintext":   "hello world",
@@ -158,8 +158,8 @@ func TestPathEncrypt_Write(t *testing.T) {
 		if err != logical.ErrPermissionDenied {
 			t.Errorf("expected %q to be %q", err, logical.ErrPermissionDenied)
 		}
-		// Failed request — no billing count or attribution should be recorded
-		require.Equal(t, uint64(0), b.billingDataCounts.Load())
-		verifyNoGcpkmsAttribution(t, b, "auth_abc123")
+		// Failed request — count must not increase; no attribution for this accessor
+		require.Equal(t, countBefore, b.billingDataCounts.Load())
+		verifyNoGcpkmsAttribution(t, b, "auth_versioned")
 	})
 }
