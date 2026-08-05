@@ -13,7 +13,6 @@ import (
 )
 
 func TestPathReencrypt_Write(t *testing.T) {
-
 	t.Run("field_validation", func(t *testing.T) {
 		testFieldValidation(t, logical.UpdateOperation, "reencrypt/my-key")
 	})
@@ -39,20 +38,19 @@ func TestPathReencrypt_Write(t *testing.T) {
 
 	t.Run("group", func(t *testing.T) {
 		t.Run("integration", func(t *testing.T) {
-
 			// Generate some ciphertext
 			plaintext := "hello world"
 			ctx := context.Background()
 			resp, err := b.HandleRequest(ctx, &logical.Request{
-					Storage:       storage,
-					Operation:     logical.UpdateOperation,
-					Path:          "encrypt/my-key",
-					MountAccessor: "auth_abc123",
-					MountPoint:    "gcpkms/",
-					Data: map[string]interface{}{
-						"plaintext": plaintext,
-					},
-				})
+				Storage:       storage,
+				Operation:     logical.UpdateOperation,
+				Path:          "encrypt/my-key",
+				MountAccessor: "auth_abc123",
+				MountPoint:    "gcpkms/",
+				Data: map[string]interface{}{
+					"plaintext": plaintext,
+				},
+			})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -119,16 +117,16 @@ func TestPathReencrypt_Write(t *testing.T) {
 			}
 
 			// Encrypt the ciphertext
-				encryptResp, err := b.HandleRequest(ctx, &logical.Request{
-					Storage:       storage,
-					Operation:     logical.UpdateOperation,
-					Path:          "reencrypt/my-key",
-					MountAccessor: "auth_abc123",
-					MountPoint:    "gcpkms/",
-					Data: map[string]interface{}{
-						"ciphertext": ciphertextV1,
-					},
-				})
+			encryptResp, err := b.HandleRequest(ctx, &logical.Request{
+				Storage:       storage,
+				Operation:     logical.UpdateOperation,
+				Path:          "reencrypt/my-key",
+				MountAccessor: "auth_abc123",
+				MountPoint:    "gcpkms/",
+				Data: map[string]interface{}{
+					"ciphertext": ciphertextV1,
+				},
+			})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -152,8 +150,8 @@ func TestPathReencrypt_Write(t *testing.T) {
 			}
 
 			// Verify billing data count and attribution (1 encrypt + 1 reencrypt)
-				require.Equal(t, uint64(2), b.billingDataCounts.Load())
-				verifyGcpkmsAttribution(t, b, "auth_abc123", "gcpkms/", 2)
+			require.Equal(t, uint64(2), b.billingDataCounts.Load())
+			verifyGcpkmsAttribution(t, b, "auth_abc123", "gcpkms/", 2)
 		})
 
 		t.Run("less_min_version", func(t *testing.T) {
