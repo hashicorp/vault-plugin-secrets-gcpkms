@@ -40,7 +40,10 @@ func testBackend(tb testing.TB) (*backend, logical.Storage) {
 	if err != nil {
 		tb.Fatal(err)
 	}
-	return b.(*backend), config.StorageView
+	be := b.(*backend)
+	fake := newFakeConsumptionBillingManager()
+	be.Backend.ConsumptionBillingManager = fake
+	return be, config.StorageView, fake
 }
 
 // testFieldValidation verifies the given path has field validation.
