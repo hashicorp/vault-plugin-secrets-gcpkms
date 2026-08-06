@@ -40,7 +40,7 @@ func TestPathDecrypt_Write(t *testing.T) {
 				cryptoKey, cleanup := testCreateKMSCryptoKeyAsymmetricDecrypt(t, algo)
 				defer cleanup()
 
-				b, storage := testBackend(t)
+				b, storage, fake := testBackend(t)
 
 				ctx := context.Background()
 				if err := storage.Put(ctx, &logical.StorageEntry{
@@ -101,8 +101,8 @@ func TestPathDecrypt_Write(t *testing.T) {
 				}
 
 				// Verify billing data count and attribution
-				require.Equal(t, uint64(1), b.billingDataCounts.Load())
-				verifyGcpkmsAttribution(t, b, "auth_abc123", "gcpkms/", 1)
+				require.Equal(t, uint64(1), fake.totalCount.Load())
+				verifyGcpkmsAttribution(t, fake, "auth_abc123", "gcpkms/", 1)
 			})
 		}
 	})
@@ -132,7 +132,7 @@ func TestPathDecrypt_Write(t *testing.T) {
 				cryptoKey, cleanup := testCreateKMSCryptoKeySymmetric(t)
 				defer cleanup()
 
-				b, storage := testBackend(t)
+				b, storage, fake := testBackend(t)
 
 				ctx := context.Background()
 				if err := storage.Put(ctx, &logical.StorageEntry{
@@ -169,8 +169,8 @@ func TestPathDecrypt_Write(t *testing.T) {
 					t.Fatal(err)
 				}
 
-				require.Equal(t, uint64(1), b.billingDataCounts.Load())
-				verifyGcpkmsAttribution(t, b, "auth_abc123", "gcpkms/", 1)
+				require.Equal(t, uint64(1), fake.totalCount.Load())
+				verifyGcpkmsAttribution(t, fake, "auth_abc123", "gcpkms/", 1)
 
 				if v, exp := resp.Data["plaintext"], tc.exp; v != exp {
 					t.Errorf("expected %q to be %q", v, exp)

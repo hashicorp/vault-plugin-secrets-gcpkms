@@ -39,7 +39,7 @@ func TestPathKeysDeregister_Write(t *testing.T) {
 
 			t.Run(tc.name, func(t *testing.T) {
 
-				b, storage := testBackend(t)
+				b, storage, _ := testBackend(t)
 
 				if tc.c != nil {
 					if err := storage.Put(context.Background(), &logical.StorageEntry{

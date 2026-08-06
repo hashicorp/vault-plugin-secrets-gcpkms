@@ -29,7 +29,7 @@ import (
 )
 
 // testBackend creates a new isolated instance of the backend for testing.
-func testBackend(tb testing.TB) (*backend, logical.Storage) {
+func testBackend(tb testing.TB) (*backend, logical.Storage, *fakeConsumptionBillingManager) {
 	tb.Helper()
 
 	config := logical.TestBackendConfig()
@@ -50,7 +50,7 @@ func testBackend(tb testing.TB) (*backend, logical.Storage) {
 func testFieldValidation(tb testing.TB, op logical.Operation, pth string) {
 	tb.Helper()
 
-	b, storage := testBackend(tb)
+	b, storage, _ := testBackend(tb)
 	_, err := b.HandleRequest(context.Background(), &logical.Request{
 		Storage:   storage,
 		Operation: op,
@@ -268,7 +268,7 @@ func TestBackend_KMSClient(t *testing.T) {
 
 	t.Run("allows_concurrent_reads", func(t *testing.T) {
 
-		b, storage := testBackend(t)
+		b, storage, _ := testBackend(t)
 
 		_, closer1, err := b.KMSClient(storage)
 		if err != nil {
@@ -295,7 +295,7 @@ func TestBackend_KMSClient(t *testing.T) {
 
 	t.Run("caches", func(t *testing.T) {
 
-		b, storage := testBackend(t)
+		b, storage, _ := testBackend(t)
 
 		client1, closer1, err := b.KMSClient(storage)
 		if err != nil {
@@ -317,7 +317,7 @@ func TestBackend_KMSClient(t *testing.T) {
 
 	t.Run("expires", func(t *testing.T) {
 
-		b, storage := testBackend(t)
+		b, storage, _ := testBackend(t)
 		b.kmsClientLifetime = 50 * time.Millisecond
 
 		client1, closer1, err := b.KMSClient(storage)
@@ -344,7 +344,7 @@ func TestBackend_ResetClient(t *testing.T) {
 
 	t.Run("closes_client", func(t *testing.T) {
 
-		b, storage := testBackend(t)
+		b, storage, _ := testBackend(t)
 
 		client, closer, err := b.KMSClient(storage)
 		if err != nil {
@@ -405,7 +405,7 @@ func TestBackend_Config(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 
-			b, storage := testBackend(t)
+			b, storage, _ := testBackend(t)
 
 			if tc.c != nil {
 				if err := storage.Put(context.Background(), &logical.StorageEntry{

@@ -25,7 +25,7 @@ func TestPathEncrypt_Write(t *testing.T) {
 
 	kmsClient := testKMSClient(t)
 
-	b, storage := testBackend(t)
+	b, storage, fake := testBackend(t)
 
 	if err := storage.Put(context.Background(), &logical.StorageEntry{
 		Key:   "keys/my-key",
@@ -113,14 +113,14 @@ func TestPathEncrypt_Write(t *testing.T) {
 
 				// Verify billing data count and attribution
 				expectedBillingCount++
-				require.Equal(t, expectedBillingCount, b.billingDataCounts.Load())
-				verifyGcpkmsAttribution(t, b, "auth_abc123", "gcpkms/", expectedBillingCount)
+				require.Equal(t, expectedBillingCount, fake.totalCount.Load())
+				verifyGcpkmsAttribution(t, fake, "auth_abc123", "gcpkms/", expectedBillingCount)
 			})
 		}
 	})
 
 	t.Run("less_min_version", func(t *testing.T) {
-		countBefore := b.billingDataCounts.Load()
+		countBefore := fake.totalCount.Load()
 		ctx := context.Background()
 		_, err := b.HandleRequest(ctx, &logical.Request{
 			Storage:       storage,
@@ -137,12 +137,12 @@ func TestPathEncrypt_Write(t *testing.T) {
 			t.Errorf("expected %q to be %q", err, logical.ErrPermissionDenied)
 		}
 		// Failed request — count must not increase; no attribution for this accessor
-		require.Equal(t, countBefore, b.billingDataCounts.Load())
-		verifyNoGcpkmsAttribution(t, b, "auth_versioned")
+		require.Equal(t, countBefore, fake.totalCount.Load())
+		verifyNoGcpkmsAttribution(t, fake, "auth_versioned")
 	})
 
 	t.Run("greater_max_version", func(t *testing.T) {
-		countBefore := b.billingDataCounts.Load()
+		countBefore := fake.totalCount.Load()
 		ctx := context.Background()
 		_, err := b.HandleRequest(ctx, &logical.Request{
 			Storage:       storage,
@@ -159,7 +159,7 @@ func TestPathEncrypt_Write(t *testing.T) {
 			t.Errorf("expected %q to be %q", err, logical.ErrPermissionDenied)
 		}
 		// Failed request — count must not increase; no attribution for this accessor
-		require.Equal(t, countBefore, b.billingDataCounts.Load())
-		verifyNoGcpkmsAttribution(t, b, "auth_versioned")
+		require.Equal(t, countBefore, fake.totalCount.Load())
+		verifyNoGcpkmsAttribution(t, fake, "auth_versioned")
 	})
 }
