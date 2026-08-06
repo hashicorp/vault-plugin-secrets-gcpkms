@@ -58,6 +58,8 @@ type backend struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 	ctxLock   sync.Mutex
+
+	backendUUID string
 }
 
 // Factory returns a configured instance of the backend.
