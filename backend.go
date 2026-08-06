@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/hashicorp/errwrap"
@@ -59,17 +58,6 @@ type backend struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 	ctxLock   sync.Mutex
-
-	// isTest gates test-only
-	// Set to true in testBackend() only.
-	isTest bool
-
-	// For testing purposes only. Used to track the number of billing data requests.
-	billingDataCounts atomic.Uint64
-
-	billingDataAttribution map[string]logical.MountAttribution
-
-	backendUUID string
 }
 
 // Factory returns a configured instance of the backend.
@@ -132,26 +120,6 @@ func (b *backend) initialize(ctx context.Context, _ *logical.InitializationReque
 	return nil
 }
 
-// accumulateGcpkmsAttributions upserts mount attribution data keyed by mountAccessor.
-// Only called when b.isTest is true.
-func (b *backend) accumulateGcpkmsAttributions(req *logical.Request, count uint64) error {
-	var prev uint64
-	if existing, exists := b.billingDataAttribution[req.MountAccessor]; exists {
-		if n, ok := existing.Count.(uint64); ok {
-			prev = n
-		}
-	}
-	b.billingDataAttribution[req.MountAccessor] = logical.MountAttribution{
-		MountPath:        req.MountPoint,
-		MountAccessor:    req.MountAccessor,
-		MountType:        req.MountType,
-		BackendAwareUUID: b.backendUUID,
-		Count:            prev + count,
-	}
-
-	return nil
-}
-
 func (b *backend) incrementBillingDataCount(ctx context.Context, req *logical.Request, count uint64) error {
 	mountPath := ""
 	mountAccessor := ""
@@ -160,13 +128,6 @@ func (b *backend) incrementBillingDataCount(ctx context.Context, req *logical.Re
 		mountPath = req.MountPoint
 		mountAccessor = req.MountAccessor
 		mountType = req.MountType
-	}
-
-	if b.isTest {
-		if err := b.accumulateGcpkmsAttributions(req, count); err != nil {
-			return err
-		}
-		b.billingDataCounts.Add(count)
 	}
 
 	// Write billing data to the consumption billing manager
