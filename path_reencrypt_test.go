@@ -20,7 +20,7 @@ func TestPathReencrypt_Write(t *testing.T) {
 	cryptoKey, cleanup := testCreateKMSCryptoKeySymmetric(t)
 	defer cleanup()
 
-	b, storage, fake := testBackend(t)
+	b, storage, mock := testBackend(t)
 
 	if err := storage.Put(context.Background(), &logical.StorageEntry{
 		Key:   "keys/my-key",
@@ -150,12 +150,12 @@ func TestPathReencrypt_Write(t *testing.T) {
 			}
 
 			// Verify billing data count and attribution (1 encrypt + 1 reencrypt)
-			require.Equal(t, uint64(2), fake.totalCount.Load())
-			verifyGcpkmsAttribution(t, fake, "auth_abc123", "gcpkms/", 2)
+			require.Equal(t, uint64(2), mock.totalCount.Load())
+			verifyGcpkmsAttribution(t, mock, "auth_abc123", "gcpkms/", 2)
 		})
 
 		t.Run("less_min_version", func(t *testing.T) {
-			countBefore := fake.totalCount.Load()
+			countBefore := mock.totalCount.Load()
 			ctx := context.Background()
 			_, err := b.HandleRequest(ctx, &logical.Request{
 				Storage:       storage,
@@ -172,12 +172,12 @@ func TestPathReencrypt_Write(t *testing.T) {
 				t.Errorf("expected %q to be %q", err, logical.ErrPermissionDenied)
 			}
 			// Failed request — count must not increase; no attribution for this accessor
-			require.Equal(t, countBefore, fake.totalCount.Load())
-			verifyNoGcpkmsAttribution(t, fake, "auth_versioned")
+			require.Equal(t, countBefore, mock.totalCount.Load())
+			verifyNoGcpkmsAttribution(t, mock, "auth_versioned")
 		})
 
 		t.Run("greater_max_version", func(t *testing.T) {
-			countBefore := fake.totalCount.Load()
+			countBefore := mock.totalCount.Load()
 			ctx := context.Background()
 			_, err := b.HandleRequest(ctx, &logical.Request{
 				Storage:       storage,
@@ -194,8 +194,8 @@ func TestPathReencrypt_Write(t *testing.T) {
 				t.Errorf("expected %q to be %q", err, logical.ErrPermissionDenied)
 			}
 			// Failed request — count must not increase; no attribution for this accessor
-			require.Equal(t, countBefore, fake.totalCount.Load())
-			verifyNoGcpkmsAttribution(t, fake, "auth_versioned")
+			require.Equal(t, countBefore, mock.totalCount.Load())
+			verifyNoGcpkmsAttribution(t, mock, "auth_versioned")
 		})
 	})
 }

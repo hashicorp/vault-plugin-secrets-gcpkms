@@ -52,7 +52,7 @@ func TestPathSign_Write(t *testing.T) {
 				cryptoKey, cleanup := testCreateKMSCryptoKeyAsymmetricSign(t, algo)
 				defer cleanup()
 
-				b, storage, fake := testBackend(t)
+				b, storage, mock := testBackend(t)
 
 				ctx := context.Background()
 				if err := storage.Put(ctx, &logical.StorageEntry{
@@ -162,8 +162,8 @@ func TestPathSign_Write(t *testing.T) {
 				}
 
 				// Verify billing data count and attribution
-				require.Equal(t, uint64(1), fake.totalCount.Load())
-				verifyGcpkmsAttribution(t, fake, "auth_abc123", "gcpkms/", 1)
+				require.Equal(t, uint64(1), mock.totalCount.Load())
+				verifyGcpkmsAttribution(t, mock, "auth_abc123", "gcpkms/", 1)
 			})
 		}
 	})

@@ -29,7 +29,7 @@ import (
 )
 
 // testBackend creates a new isolated instance of the backend for testing.
-func testBackend(tb testing.TB) (*backend, logical.Storage, *fakeConsumptionBillingManager) {
+func testBackend(tb testing.TB) (*backend, logical.Storage, *mockConsumptionBillingManager) {
 	tb.Helper()
 
 	config := logical.TestBackendConfig()
@@ -41,9 +41,9 @@ func testBackend(tb testing.TB) (*backend, logical.Storage, *fakeConsumptionBill
 		tb.Fatal(err)
 	}
 	be := b.(*backend)
-	fake := newFakeConsumptionBillingManager()
-	be.Backend.ConsumptionBillingManager = fake
-	return be, config.StorageView, fake
+	mock := newMockConsumptionBillingManager()
+	be.Backend.ConsumptionBillingManager = mock
+	return be, config.StorageView, mock
 }
 
 // testFieldValidation verifies the given path has field validation.

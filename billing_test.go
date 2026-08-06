@@ -10,21 +10,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// fakeConsumptionBillingManager is a test fake for logical.ConsumptionBillingManager.
+// mockConsumptionBillingManager is a test fake for logical.ConsumptionBillingManager.
 // It records all WriteBillingData calls so tests can assert on them.
-type fakeConsumptionBillingManager struct {
+type mockConsumptionBillingManager struct {
 	mu          sync.Mutex
 	totalCount  atomic.Uint64
 	attribution map[string]logical.MountAttribution
 }
 
-func newFakeConsumptionBillingManager() *fakeConsumptionBillingManager {
-	return &fakeConsumptionBillingManager{
+func newMockConsumptionBillingManager() *mockConsumptionBillingManager {
+	return &mockConsumptionBillingManager{
 		attribution: make(map[string]logical.MountAttribution),
 	}
 }
 
-func (f *fakeConsumptionBillingManager) WriteBillingData(_ context.Context, _ string, data map[string]interface{}) error {
+func (f *mockConsumptionBillingManager) WriteBillingData(_ context.Context, _ string, data map[string]interface{}) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
@@ -52,7 +52,7 @@ func (f *fakeConsumptionBillingManager) WriteBillingData(_ context.Context, _ st
 	return nil
 }
 
-func verifyGcpkmsAttribution(t *testing.T, f *fakeConsumptionBillingManager, mountAccessor, mountPath string, expectedCount uint64) {
+func verifyGcpkmsAttribution(t *testing.T, f *mockConsumptionBillingManager, mountAccessor, mountPath string, expectedCount uint64) {
 	t.Helper()
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -63,7 +63,7 @@ func verifyGcpkmsAttribution(t *testing.T, f *fakeConsumptionBillingManager, mou
 	require.Equal(t, mountAccessor, attribution.MountAccessor, "mountAccessor mismatch")
 }
 
-func verifyNoGcpkmsAttribution(t *testing.T, f *fakeConsumptionBillingManager, mountAccessor string) {
+func verifyNoGcpkmsAttribution(t *testing.T, f *mockConsumptionBillingManager, mountAccessor string) {
 	t.Helper()
 	f.mu.Lock()
 	defer f.mu.Unlock()
