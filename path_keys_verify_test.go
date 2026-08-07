@@ -45,7 +45,7 @@ func TestPathVerify_Write(t *testing.T) {
 				cryptoKey, cleanup := testCreateKMSCryptoKeyAsymmetricSign(t, algo)
 				defer cleanup()
 
-				b, storage := testBackend(t)
+				b, storage, mock := testBackend(t)
 
 				ctx := context.Background()
 				if err := storage.Put(ctx, &logical.StorageEntry{
@@ -99,9 +99,11 @@ func TestPathVerify_Write(t *testing.T) {
 
 				// Now verify it
 				resp, err := b.HandleRequest(ctx, &logical.Request{
-					Storage:   storage,
-					Operation: logical.UpdateOperation,
-					Path:      "verify/my-key",
+					Storage:       storage,
+					Operation:     logical.UpdateOperation,
+					Path:          "verify/my-key",
+					MountAccessor: "auth_abc123",
+					MountPoint:    "gcpkms/",
 					Data: map[string]interface{}{
 						"digest":      base64.StdEncoding.EncodeToString(digest),
 						"signature":   base64.StdEncoding.EncodeToString(signResp.Signature),
@@ -121,8 +123,9 @@ func TestPathVerify_Write(t *testing.T) {
 					t.Errorf("expected valid %t to be %t", b, true)
 				}
 
-				// Verify billing data count incremented
-				require.Equal(t, uint64(1), b.billingDataCounts.Load())
+				// Verify billing data count and attribution
+				require.Equal(t, uint64(1), mock.totalCount.Load())
+				verifyGcpkmsAttribution(t, mock, "auth_abc123", "gcpkms/", 1)
 			})
 		}
 	})

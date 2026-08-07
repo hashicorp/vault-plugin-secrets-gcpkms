@@ -58,7 +58,7 @@ func TestPathKeysConfig_Read(t *testing.T) {
 
 			t.Run(tc.name, func(t *testing.T) {
 
-				b, storage := testBackend(t)
+				b, storage, _ := testBackend(t)
 
 				if tc.data != "" {
 					if err := storage.Put(context.Background(), &logical.StorageEntry{
@@ -181,7 +181,7 @@ func TestPathKeysConfig_Write(t *testing.T) {
 
 			t.Run(tc.name, func(t *testing.T) {
 
-				b, storage := testBackend(t)
+				b, storage, _ := testBackend(t)
 
 				if err := storage.Put(context.Background(), &logical.StorageEntry{
 					Key:   "keys/my-key",
@@ -218,7 +218,7 @@ func TestPathKeysConfig_Write(t *testing.T) {
 
 	t.Run("ignores_if_not_specified", func(t *testing.T) {
 
-		b, storage := testBackend(t)
+		b, storage, _ := testBackend(t)
 
 		if err := storage.Put(context.Background(), &logical.StorageEntry{
 			Key:   "keys/my-key",

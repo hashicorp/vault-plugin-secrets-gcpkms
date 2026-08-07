@@ -25,7 +25,7 @@ func TestPathEncrypt_Write(t *testing.T) {
 
 	kmsClient := testKMSClient(t)
 
-	b, storage := testBackend(t)
+	b, storage, mock := testBackend(t)
 
 	if err := storage.Put(context.Background(), &logical.StorageEntry{
 		Key:   "keys/my-key",
@@ -70,9 +70,11 @@ func TestPathEncrypt_Write(t *testing.T) {
 
 				ctx := context.Background()
 				resp, err := b.HandleRequest(ctx, &logical.Request{
-					Storage:   storage,
-					Operation: logical.UpdateOperation,
-					Path:      "encrypt/my-key",
+					Storage:       storage,
+					Operation:     logical.UpdateOperation,
+					Path:          "encrypt/my-key",
+					MountAccessor: "auth_abc123",
+					MountPoint:    "gcpkms/",
 					Data: map[string]interface{}{
 						"additional_authenticated_data": tc.aad,
 						"plaintext":                     tc.pt,
@@ -109,20 +111,23 @@ func TestPathEncrypt_Write(t *testing.T) {
 					t.Errorf("expected %q to be %q", v, exp)
 				}
 
-				// Verify billing data count incremented
+				// Verify billing data count and attribution
 				expectedBillingCount++
-				require.Equal(t, expectedBillingCount, b.billingDataCounts.Load())
+				require.Equal(t, expectedBillingCount, mock.totalCount.Load())
+				verifyGcpkmsAttribution(t, mock, "auth_abc123", "gcpkms/", expectedBillingCount)
 			})
 		}
 	})
 
 	t.Run("less_min_version", func(t *testing.T) {
-
+		countBefore := mock.totalCount.Load()
 		ctx := context.Background()
 		_, err := b.HandleRequest(ctx, &logical.Request{
-			Storage:   storage,
-			Operation: logical.UpdateOperation,
-			Path:      "encrypt/my-versioned-key",
+			Storage:       storage,
+			Operation:     logical.UpdateOperation,
+			Path:          "encrypt/my-versioned-key",
+			MountAccessor: "auth_versioned",
+			MountPoint:    "gcpkms/",
 			Data: map[string]interface{}{
 				"plaintext":   "hello world",
 				"key_version": 2,
@@ -131,15 +136,20 @@ func TestPathEncrypt_Write(t *testing.T) {
 		if err != logical.ErrPermissionDenied {
 			t.Errorf("expected %q to be %q", err, logical.ErrPermissionDenied)
 		}
+		// Failed request — count must not increase; no attribution for this accessor
+		require.Equal(t, countBefore, mock.totalCount.Load())
+		verifyNoGcpkmsAttribution(t, mock, "auth_versioned")
 	})
 
 	t.Run("greater_max_version", func(t *testing.T) {
-
+		countBefore := mock.totalCount.Load()
 		ctx := context.Background()
 		_, err := b.HandleRequest(ctx, &logical.Request{
-			Storage:   storage,
-			Operation: logical.UpdateOperation,
-			Path:      "encrypt/my-versioned-key",
+			Storage:       storage,
+			Operation:     logical.UpdateOperation,
+			Path:          "encrypt/my-versioned-key",
+			MountAccessor: "auth_versioned",
+			MountPoint:    "gcpkms/",
 			Data: map[string]interface{}{
 				"plaintext":   "hello world",
 				"key_version": 7,
@@ -148,5 +158,8 @@ func TestPathEncrypt_Write(t *testing.T) {
 		if err != logical.ErrPermissionDenied {
 			t.Errorf("expected %q to be %q", err, logical.ErrPermissionDenied)
 		}
+		// Failed request — count must not increase; no attribution for this accessor
+		require.Equal(t, countBefore, mock.totalCount.Load())
+		verifyNoGcpkmsAttribution(t, mock, "auth_versioned")
 	})
 }

@@ -39,7 +39,7 @@ func TestPathPubkey_Read(t *testing.T) {
 				cryptoKey, cleanup := testCreateKMSCryptoKeyAsymmetricDecrypt(t, algo)
 				defer cleanup()
 
-				b, storage := testBackend(t)
+				b, storage, _ := testBackend(t)
 
 				ctx := context.Background()
 				if err := storage.Put(ctx, &logical.StorageEntry{
@@ -105,7 +105,7 @@ func TestPathPubkey_Read(t *testing.T) {
 				cryptoKey, cleanup := testCreateKMSCryptoKeyAsymmetricSign(t, algo)
 				defer cleanup()
 
-				b, storage := testBackend(t)
+				b, storage, _ := testBackend(t)
 
 				ctx := context.Background()
 				if err := storage.Put(ctx, &logical.StorageEntry{

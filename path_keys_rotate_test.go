@@ -19,7 +19,7 @@ func TestPathKeysRotate_Write(t *testing.T) {
 	cryptoKey, cleanup := testCreateKMSCryptoKeySymmetric(t)
 	defer cleanup()
 
-	b, storage := testBackend(t)
+	b, storage, _ := testBackend(t)
 
 	if err := storage.Put(context.Background(), &logical.StorageEntry{
 		Key:   "keys/key-without-crypto-key",
