@@ -13,6 +13,7 @@ import (
 )
 
 func TestPathReencrypt_Write(t *testing.T) {
+
 	t.Run("field_validation", func(t *testing.T) {
 		testFieldValidation(t, logical.UpdateOperation, "reencrypt/my-key")
 	})
@@ -20,7 +21,7 @@ func TestPathReencrypt_Write(t *testing.T) {
 	cryptoKey, cleanup := testCreateKMSCryptoKeySymmetric(t)
 	defer cleanup()
 
-	b, storage, mock := testBackend(t)
+	b, storage := testBackend(t)
 
 	if err := storage.Put(context.Background(), &logical.StorageEntry{
 		Key:   "keys/my-key",
@@ -38,15 +39,14 @@ func TestPathReencrypt_Write(t *testing.T) {
 
 	t.Run("group", func(t *testing.T) {
 		t.Run("integration", func(t *testing.T) {
+
 			// Generate some ciphertext
 			plaintext := "hello world"
 			ctx := context.Background()
 			resp, err := b.HandleRequest(ctx, &logical.Request{
-				Storage:       storage,
-				Operation:     logical.UpdateOperation,
-				Path:          "encrypt/my-key",
-				MountAccessor: "auth_abc123",
-				MountPoint:    "gcpkms/",
+				Storage:   storage,
+				Operation: logical.UpdateOperation,
+				Path:      "encrypt/my-key",
 				Data: map[string]interface{}{
 					"plaintext": plaintext,
 				},
@@ -118,11 +118,9 @@ func TestPathReencrypt_Write(t *testing.T) {
 
 			// Encrypt the ciphertext
 			encryptResp, err := b.HandleRequest(ctx, &logical.Request{
-				Storage:       storage,
-				Operation:     logical.UpdateOperation,
-				Path:          "reencrypt/my-key",
-				MountAccessor: "auth_abc123",
-				MountPoint:    "gcpkms/",
+				Storage:   storage,
+				Operation: logical.UpdateOperation,
+				Path:      "reencrypt/my-key",
 				Data: map[string]interface{}{
 					"ciphertext": ciphertextV1,
 				},
@@ -149,20 +147,17 @@ func TestPathReencrypt_Write(t *testing.T) {
 				t.Errorf("not reencrypted")
 			}
 
-			// Verify billing data count and attribution (1 encrypt + 1 reencrypt)
-			require.Equal(t, uint64(2), mock.totalCount.Load())
-			verifyGcpkmsAttribution(t, mock, "auth_abc123", "gcpkms/", 2)
+			// Verify billing data count incremented (1 encrypt + 1 reencrypt)
+			require.Equal(t, uint64(2), b.billingDataCounts.Load())
 		})
 
 		t.Run("less_min_version", func(t *testing.T) {
-			countBefore := mock.totalCount.Load()
+
 			ctx := context.Background()
 			_, err := b.HandleRequest(ctx, &logical.Request{
-				Storage:       storage,
-				Operation:     logical.UpdateOperation,
-				Path:          "reencrypt/my-versioned-key",
-				MountAccessor: "auth_versioned",
-				MountPoint:    "gcpkms/",
+				Storage:   storage,
+				Operation: logical.UpdateOperation,
+				Path:      "reencrypt/my-versioned-key",
 				Data: map[string]interface{}{
 					"ciphertext":  "hello world",
 					"key_version": 2,
@@ -171,20 +166,15 @@ func TestPathReencrypt_Write(t *testing.T) {
 			if err != logical.ErrPermissionDenied {
 				t.Errorf("expected %q to be %q", err, logical.ErrPermissionDenied)
 			}
-			// Failed request — count must not increase; no attribution for this accessor
-			require.Equal(t, countBefore, mock.totalCount.Load())
-			verifyNoGcpkmsAttribution(t, mock, "auth_versioned")
 		})
 
 		t.Run("greater_max_version", func(t *testing.T) {
-			countBefore := mock.totalCount.Load()
+
 			ctx := context.Background()
 			_, err := b.HandleRequest(ctx, &logical.Request{
-				Storage:       storage,
-				Operation:     logical.UpdateOperation,
-				Path:          "reencrypt/my-versioned-key",
-				MountAccessor: "auth_versioned",
-				MountPoint:    "gcpkms/",
+				Storage:   storage,
+				Operation: logical.UpdateOperation,
+				Path:      "reencrypt/my-versioned-key",
 				Data: map[string]interface{}{
 					"ciphertext":  "hello world",
 					"key_version": 7,
@@ -193,9 +183,6 @@ func TestPathReencrypt_Write(t *testing.T) {
 			if err != logical.ErrPermissionDenied {
 				t.Errorf("expected %q to be %q", err, logical.ErrPermissionDenied)
 			}
-			// Failed request — count must not increase; no attribution for this accessor
-			require.Equal(t, countBefore, mock.totalCount.Load())
-			verifyNoGcpkmsAttribution(t, mock, "auth_versioned")
 		})
 	})
 }

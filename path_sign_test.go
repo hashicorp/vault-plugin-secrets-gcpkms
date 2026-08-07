@@ -52,7 +52,7 @@ func TestPathSign_Write(t *testing.T) {
 				cryptoKey, cleanup := testCreateKMSCryptoKeyAsymmetricSign(t, algo)
 				defer cleanup()
 
-				b, storage, mock := testBackend(t)
+				b, storage := testBackend(t)
 
 				ctx := context.Background()
 				if err := storage.Put(ctx, &logical.StorageEntry{
@@ -80,11 +80,9 @@ func TestPathSign_Write(t *testing.T) {
 
 				// Now sign it
 				resp, err := b.HandleRequest(ctx, &logical.Request{
-					Storage:       storage,
-					Operation:     logical.UpdateOperation,
-					Path:          "sign/my-key",
-					MountAccessor: "auth_abc123",
-					MountPoint:    "gcpkms/",
+					Storage:   storage,
+					Operation: logical.UpdateOperation,
+					Path:      "sign/my-key",
 					Data: map[string]interface{}{
 						"digest":      base64.StdEncoding.EncodeToString(digest),
 						"key_version": 1,
@@ -161,9 +159,8 @@ func TestPathSign_Write(t *testing.T) {
 					t.Fatalf("unknown algorithm: %s", pk.Algorithm)
 				}
 
-				// Verify billing data count and attribution
-				require.Equal(t, uint64(1), mock.totalCount.Load())
-				verifyGcpkmsAttribution(t, mock, "auth_abc123", "gcpkms/", 1)
+				// Verify billing data count incremented
+				require.Equal(t, uint64(1), b.billingDataCounts.Load())
 			})
 		}
 	})

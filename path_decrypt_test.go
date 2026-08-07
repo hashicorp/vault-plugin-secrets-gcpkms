@@ -26,6 +26,7 @@ func TestPathDecrypt_Write(t *testing.T) {
 	})
 
 	t.Run("asymmetric", func(t *testing.T) {
+
 		algorithms := []kmspb.CryptoKeyVersion_CryptoKeyVersionAlgorithm{
 			kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_2048_SHA256,
 			kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_3072_SHA256,
@@ -37,10 +38,11 @@ func TestPathDecrypt_Write(t *testing.T) {
 			name := strings.ToLower(algo.String())
 
 			t.Run(name, func(t *testing.T) {
+
 				cryptoKey, cleanup := testCreateKMSCryptoKeyAsymmetricDecrypt(t, algo)
 				defer cleanup()
 
-				b, storage, mock := testBackend(t)
+				b, storage := testBackend(t)
 
 				ctx := context.Background()
 				if err := storage.Put(ctx, &logical.StorageEntry{
@@ -82,11 +84,9 @@ func TestPathDecrypt_Write(t *testing.T) {
 
 				// Now decrypt it
 				resp, err := b.HandleRequest(ctx, &logical.Request{
-					Storage:       storage,
-					Operation:     logical.UpdateOperation,
-					Path:          "decrypt/my-key",
-					MountAccessor: "auth_abc123",
-					MountPoint:    "gcpkms/",
+					Storage:   storage,
+					Operation: logical.UpdateOperation,
+					Path:      "decrypt/my-key",
 					Data: map[string]interface{}{
 						"ciphertext":  base64.StdEncoding.EncodeToString(enc),
 						"key_version": 1,
@@ -100,14 +100,14 @@ func TestPathDecrypt_Write(t *testing.T) {
 					t.Errorf("expected %q to be %q", v, exp)
 				}
 
-				// Verify billing data count and attribution
-				require.Equal(t, uint64(1), mock.totalCount.Load())
-				verifyGcpkmsAttribution(t, mock, "auth_abc123", "gcpkms/", 1)
+				// Verify billing data count incremented
+				require.Equal(t, uint64(1), b.billingDataCounts.Load())
 			})
 		}
 	})
 
 	t.Run("symmetric", func(t *testing.T) {
+
 		cases := []struct {
 			name string
 			aad  string
@@ -129,10 +129,11 @@ func TestPathDecrypt_Write(t *testing.T) {
 			tc := tc
 
 			t.Run(tc.name, func(t *testing.T) {
+
 				cryptoKey, cleanup := testCreateKMSCryptoKeySymmetric(t)
 				defer cleanup()
 
-				b, storage, mock := testBackend(t)
+				b, storage := testBackend(t)
 
 				ctx := context.Background()
 				if err := storage.Put(ctx, &logical.StorageEntry{
@@ -155,11 +156,9 @@ func TestPathDecrypt_Write(t *testing.T) {
 
 				// Now decrypt it
 				resp, err := b.HandleRequest(ctx, &logical.Request{
-					Storage:       storage,
-					Operation:     logical.UpdateOperation,
-					Path:          "decrypt/my-key",
-					MountAccessor: "auth_abc123",
-					MountPoint:    "gcpkms/",
+					Storage:   storage,
+					Operation: logical.UpdateOperation,
+					Path:      "decrypt/my-key",
 					Data: map[string]interface{}{
 						"additional_authenticated_data": tc.aad,
 						"ciphertext":                    base64.StdEncoding.EncodeToString(encryptResp.Ciphertext),
@@ -169,8 +168,7 @@ func TestPathDecrypt_Write(t *testing.T) {
 					t.Fatal(err)
 				}
 
-				require.Equal(t, uint64(1), mock.totalCount.Load())
-				verifyGcpkmsAttribution(t, mock, "auth_abc123", "gcpkms/", 1)
+				require.Equal(t, uint64(1), b.billingDataCounts.Load())
 
 				if v, exp := resp.Data["plaintext"], tc.exp; v != exp {
 					t.Errorf("expected %q to be %q", v, exp)

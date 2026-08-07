@@ -20,7 +20,7 @@ func TestBackend_PathConfigRead(t *testing.T) {
 
 	t.Run("not_exist", func(t *testing.T) {
 
-		b, storage, _ := testBackend(t)
+		b, storage := testBackend(t)
 		ctx := context.Background()
 		resp, err := b.HandleRequest(ctx, &logical.Request{
 			Storage:   storage,
@@ -38,7 +38,7 @@ func TestBackend_PathConfigRead(t *testing.T) {
 
 	t.Run("exist", func(t *testing.T) {
 
-		b, storage, _ := testBackend(t)
+		b, storage := testBackend(t)
 
 		entry, err := logical.StorageEntryJSON("config", &Config{
 			Scopes:      []string{"foo"},
@@ -80,7 +80,7 @@ func TestBackend_PathConfigUpdate(t *testing.T) {
 
 	t.Run("not_exist", func(t *testing.T) {
 
-		b, storage, _ := testBackend(t)
+		b, storage := testBackend(t)
 		if _, err := b.HandleRequest(context.Background(), &logical.Request{
 			Storage:   storage,
 			Operation: logical.UpdateOperation,
@@ -109,7 +109,7 @@ func TestBackend_PathConfigUpdate(t *testing.T) {
 
 	t.Run("exist", func(t *testing.T) {
 
-		b, storage, _ := testBackend(t)
+		b, storage := testBackend(t)
 
 		entry, err := logical.StorageEntryJSON("config", &Config{
 			Scopes:      []string{"foo"},
@@ -158,7 +158,7 @@ func TestBackend_PathConfigDelete(t *testing.T) {
 
 	t.Run("not_exist", func(t *testing.T) {
 
-		b, storage, _ := testBackend(t)
+		b, storage := testBackend(t)
 		if _, err := b.HandleRequest(context.Background(), &logical.Request{
 			Storage:   storage,
 			Operation: logical.DeleteOperation,
@@ -179,7 +179,7 @@ func TestBackend_PathConfigDelete(t *testing.T) {
 
 	t.Run("exist", func(t *testing.T) {
 
-		b, storage, _ := testBackend(t)
+		b, storage := testBackend(t)
 
 		entry, err := logical.StorageEntryJSON("config", &Config{
 			Scopes:      []string{"foo"},

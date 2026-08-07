@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/hashicorp/errwrap"
@@ -59,7 +60,8 @@ type backend struct {
 	ctxCancel context.CancelFunc
 	ctxLock   sync.Mutex
 
-	backendUUID string
+	// For testing purposes only. Used to track the number of billing data requests.
+	billingDataCounts atomic.Uint64
 }
 
 // Factory returns a configured instance of the backend.
@@ -68,7 +70,6 @@ func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, er
 	if err := b.Setup(ctx, c); err != nil {
 		return nil, err
 	}
-	b.backendUUID = c.BackendUUID
 	return b, nil
 }
 
@@ -122,23 +123,13 @@ func (b *backend) initialize(ctx context.Context, _ *logical.InitializationReque
 	return nil
 }
 
-func (b *backend) incrementBillingDataCount(ctx context.Context, req *logical.Request, count uint64) error {
-	mountPath := ""
-	mountAccessor := ""
-	mountType := ""
-	if req != nil {
-		mountPath = req.MountPoint
-		mountAccessor = req.MountAccessor
-		mountType = req.MountType
-	}
+func (b *backend) incrementBillingDataCount(ctx context.Context, count uint64) error {
+	// Increment the billing data count for testing
+	b.billingDataCounts.Add(count)
 
 	// Write billing data to the consumption billing manager
 	return b.ConsumptionBillingManager.WriteBillingData(ctx, "gcpkms", map[string]interface{}{
-		"count":            count,
-		"mountAccessor":    mountAccessor,
-		"mountPath":        mountPath,
-		"mountType":        mountType,
-		"backendAwareUUID": b.backendUUID,
+		"count": count,
 	})
 }
 

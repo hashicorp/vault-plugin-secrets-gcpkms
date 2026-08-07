@@ -22,7 +22,7 @@ func TestPathKeys_List(t *testing.T) {
 		testFieldValidation(t, logical.ListOperation, "keys")
 	})
 
-	b, storage, _ := testBackend(t)
+	b, storage := testBackend(t)
 
 	ctx := context.Background()
 	if err := storage.Put(ctx, &logical.StorageEntry{
@@ -56,7 +56,7 @@ func TestPathKeys_Read(t *testing.T) {
 	cryptoKey, cleanup := testCreateKMSCryptoKeySymmetric(t)
 	defer cleanup()
 
-	b, storage, _ := testBackend(t)
+	b, storage := testBackend(t)
 
 	if err := storage.Put(context.Background(), &logical.StorageEntry{
 		Key:   "keys/key-without-crypto-key",
@@ -307,7 +307,7 @@ func TestPathKeys_Write(t *testing.T) {
 
 			t.Run(tc.name, func(t *testing.T) {
 
-				b, storage, _ := testBackend(t)
+				b, storage := testBackend(t)
 
 				ctx := context.Background()
 				if _, err := b.HandleRequest(ctx, &logical.Request{
@@ -362,7 +362,7 @@ func TestPathKeys_Delete(t *testing.T) {
 	cryptoKey, cleanup := testCreateKMSCryptoKeySymmetric(t)
 	defer cleanup()
 
-	b, storage, _ := testBackend(t)
+	b, storage := testBackend(t)
 
 	if err := storage.Put(context.Background(), &logical.StorageEntry{
 		Key:   "keys/key-without-crypto-key",

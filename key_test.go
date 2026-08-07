@@ -47,7 +47,7 @@ func TestKey_Key(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 
-			b, storage, _ := testBackend(t)
+			b, storage := testBackend(t)
 
 			if tc.c != nil {
 				if err := storage.Put(context.Background(), &logical.StorageEntry{
@@ -97,7 +97,7 @@ func TestKey_Keys(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 
-			b, storage, _ := testBackend(t)
+			b, storage := testBackend(t)
 
 			if tc.c != nil {
 				if err := storage.Put(context.Background(), &logical.StorageEntry{

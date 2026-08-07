@@ -58,7 +58,7 @@ func TestPathKeysRegister_Write(t *testing.T) {
 			t.Run(tc.name, func(t *testing.T) {
 				key := path.Base(tc.cryptoKey)
 
-				b, storage, _ := testBackend(t)
+				b, storage := testBackend(t)
 				_, err := b.HandleRequest(context.Background(), &logical.Request{
 					Storage:   storage,
 					Operation: logical.UpdateOperation,

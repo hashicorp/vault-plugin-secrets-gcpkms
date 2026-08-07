@@ -29,7 +29,7 @@ import (
 )
 
 // testBackend creates a new isolated instance of the backend for testing.
-func testBackend(tb testing.TB) (*backend, logical.Storage, *mockConsumptionBillingManager) {
+func testBackend(tb testing.TB) (*backend, logical.Storage) {
 	tb.Helper()
 
 	config := logical.TestBackendConfig()
@@ -40,17 +40,14 @@ func testBackend(tb testing.TB) (*backend, logical.Storage, *mockConsumptionBill
 	if err != nil {
 		tb.Fatal(err)
 	}
-	be := b.(*backend)
-	mock := newMockConsumptionBillingManager()
-	be.Backend.ConsumptionBillingManager = mock
-	return be, config.StorageView, mock
+	return b.(*backend), config.StorageView
 }
 
 // testFieldValidation verifies the given path has field validation.
 func testFieldValidation(tb testing.TB, op logical.Operation, pth string) {
 	tb.Helper()
 
-	b, storage, _ := testBackend(tb)
+	b, storage := testBackend(tb)
 	_, err := b.HandleRequest(context.Background(), &logical.Request{
 		Storage:   storage,
 		Operation: op,
@@ -268,7 +265,7 @@ func TestBackend_KMSClient(t *testing.T) {
 
 	t.Run("allows_concurrent_reads", func(t *testing.T) {
 
-		b, storage, _ := testBackend(t)
+		b, storage := testBackend(t)
 
 		_, closer1, err := b.KMSClient(storage)
 		if err != nil {
@@ -295,7 +292,7 @@ func TestBackend_KMSClient(t *testing.T) {
 
 	t.Run("caches", func(t *testing.T) {
 
-		b, storage, _ := testBackend(t)
+		b, storage := testBackend(t)
 
 		client1, closer1, err := b.KMSClient(storage)
 		if err != nil {
@@ -317,7 +314,7 @@ func TestBackend_KMSClient(t *testing.T) {
 
 	t.Run("expires", func(t *testing.T) {
 
-		b, storage, _ := testBackend(t)
+		b, storage := testBackend(t)
 		b.kmsClientLifetime = 50 * time.Millisecond
 
 		client1, closer1, err := b.KMSClient(storage)
@@ -344,7 +341,7 @@ func TestBackend_ResetClient(t *testing.T) {
 
 	t.Run("closes_client", func(t *testing.T) {
 
-		b, storage, _ := testBackend(t)
+		b, storage := testBackend(t)
 
 		client, closer, err := b.KMSClient(storage)
 		if err != nil {
@@ -405,7 +402,7 @@ func TestBackend_Config(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 
-			b, storage, _ := testBackend(t)
+			b, storage := testBackend(t)
 
 			if tc.c != nil {
 				if err := storage.Put(context.Background(), &logical.StorageEntry{

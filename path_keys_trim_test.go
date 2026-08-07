@@ -27,7 +27,7 @@ func TestPathKeysTrim_Write(t *testing.T) {
 
 	kmsClient := testKMSClient(t)
 
-	b, storage, _ := testBackend(t)
+	b, storage := testBackend(t)
 
 	if err := storage.Put(context.Background(), &logical.StorageEntry{
 		Key:   "keys/my-versioned-key",
