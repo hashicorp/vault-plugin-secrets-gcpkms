@@ -68,8 +68,22 @@ correct version automatically.
 			},
 		},
 
-		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.UpdateOperation: withFieldValidator(b.pathDecryptWrite),
+		Operations: map[logical.Operation]framework.OperationHandler{
+			logical.UpdateOperation: &framework.PathOperation{
+				Callback: withFieldValidator(b.pathDecryptWrite),
+				Summary:  "Decrypt a ciphertext value using a named key.",
+				Responses: map[int][]framework.Response{
+					200: {{
+						Description: "OK",
+						Fields: map[string]*framework.FieldSchema{
+							"plaintext": {
+								Type:        framework.TypeString,
+								Description: "Decrypted plaintext value.",
+							},
+						},
+					}},
+				},
+			},
 		},
 	}
 }

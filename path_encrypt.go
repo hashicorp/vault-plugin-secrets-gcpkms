@@ -66,8 +66,26 @@ limitations by key types.
 			},
 		},
 
-		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.UpdateOperation: withFieldValidator(b.pathEncryptWrite),
+		Operations: map[logical.Operation]framework.OperationHandler{
+			logical.UpdateOperation: &framework.PathOperation{
+				Callback: withFieldValidator(b.pathEncryptWrite),
+				Summary:  "Encrypt a plaintext value using a named key.",
+				Responses: map[int][]framework.Response{
+					200: {{
+						Description: "OK",
+						Fields: map[string]*framework.FieldSchema{
+							"key_version": {
+								Type:        framework.TypeString,
+								Description: "Key version used for encryption.",
+							},
+							"ciphertext": {
+								Type:        framework.TypeString,
+								Description: "Base64-encoded encrypted ciphertext.",
+							},
+						},
+					}},
+				},
+			},
 		},
 	}
 }

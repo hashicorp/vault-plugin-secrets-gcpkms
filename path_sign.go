@@ -57,8 +57,22 @@ required.
 			},
 		},
 
-		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.UpdateOperation: withFieldValidator(b.pathSignWrite),
+		Operations: map[logical.Operation]framework.OperationHandler{
+			logical.UpdateOperation: &framework.PathOperation{
+				Callback: withFieldValidator(b.pathSignWrite),
+				Summary:  "Sign a message or digest using a named key.",
+				Responses: map[int][]framework.Response{
+					200: {{
+						Description: "OK",
+						Fields: map[string]*framework.FieldSchema{
+							"signature": {
+								Type:        framework.TypeString,
+								Description: "Base64-encoded signature.",
+							},
+						},
+					}},
+				},
+			},
 		},
 	}
 }

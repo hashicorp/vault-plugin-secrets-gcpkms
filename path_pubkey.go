@@ -48,8 +48,26 @@ This field is required.
 			},
 		},
 
-		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.ReadOperation: withFieldValidator(b.pathPubkeyRead),
+		Operations: map[logical.Operation]framework.OperationHandler{
+			logical.ReadOperation: &framework.PathOperation{
+				Callback: withFieldValidator(b.pathPubkeyRead),
+				Summary:  "Retrieve the public key associated with a named key.",
+				Responses: map[int][]framework.Response{
+					200: {{
+						Description: "OK",
+						Fields: map[string]*framework.FieldSchema{
+							"pem": {
+								Type:        framework.TypeString,
+								Description: "PEM-encoded public key.",
+							},
+							"algorithm": {
+								Type:        framework.TypeString,
+								Description: "Algorithm of the public key.",
+							},
+						},
+					}},
+				},
+			},
 		},
 	}
 }

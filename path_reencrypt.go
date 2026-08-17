@@ -65,8 +65,26 @@ unspecified, this defaults to the latest active crypto key version.
 			},
 		},
 
-		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.UpdateOperation: withFieldValidator(b.pathReencryptWrite),
+		Operations: map[logical.Operation]framework.OperationHandler{
+			logical.UpdateOperation: &framework.PathOperation{
+				Callback: withFieldValidator(b.pathReencryptWrite),
+				Summary:  "Re-encrypt existing ciphertext data to a new version.",
+				Responses: map[int][]framework.Response{
+					200: {{
+						Description: "OK",
+						Fields: map[string]*framework.FieldSchema{
+							"key_version": {
+								Type:        framework.TypeString,
+								Description: "Key version used for re-encryption.",
+							},
+							"ciphertext": {
+								Type:        framework.TypeString,
+								Description: "Base64-encoded re-encrypted ciphertext.",
+							},
+						},
+					}},
+				},
+			},
 		},
 	}
 }

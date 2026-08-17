@@ -40,8 +40,22 @@ func (b *backend) pathKeys() *framework.Path {
 		HelpSynopsis:    "List named keys",
 		HelpDescription: "List the named keys available for use.",
 
-		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.ListOperation: withFieldValidator(b.pathKeysList),
+		Operations: map[logical.Operation]framework.OperationHandler{
+			logical.ListOperation: &framework.PathOperation{
+				Callback: withFieldValidator(b.pathKeysList),
+				Summary:  "List all named keys.",
+				Responses: map[int][]framework.Response{
+					200: {{
+						Description: "OK",
+						Fields: map[string]*framework.FieldSchema{
+							"keys": {
+								Type:        framework.TypeSlice,
+								Description: "List of named keys.",
+							},
+						},
+					}},
+				},
+			},
 		},
 	}
 }
@@ -177,11 +191,75 @@ labels, specify this argument multiple times (e.g. labels="a=b" labels="c=d").
 
 		ExistenceCheck: b.pathKeysExistenceCheck,
 
-		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.ReadOperation:   withFieldValidator(b.pathKeysRead),
-			logical.CreateOperation: withFieldValidator(b.pathKeysWrite),
-			logical.UpdateOperation: withFieldValidator(b.pathKeysWrite),
-			logical.DeleteOperation: withFieldValidator(b.pathKeysDelete),
+		Operations: map[logical.Operation]framework.OperationHandler{
+			logical.ReadOperation: &framework.PathOperation{
+				Callback: withFieldValidator(b.pathKeysRead),
+				Summary:  "Return information about a named key.",
+				Responses: map[int][]framework.Response{
+					200: {{
+						Description: "OK",
+						Fields: map[string]*framework.FieldSchema{
+							"id": {
+								Type:        framework.TypeString,
+								Description: "Full Google Cloud KMS resource ID of the key.",
+							},
+							"purpose": {
+								Type:        framework.TypeString,
+								Description: "Purpose of the crypto key.",
+							},
+							"labels": {
+								Type:        framework.TypeMap,
+								Description: "Labels applied to the crypto key.",
+							},
+							"next_rotation_time_seconds": {
+								Type:        framework.TypeInt,
+								Description: "Unix epoch timestamp of the next scheduled rotation.",
+							},
+							"rotation_schedule_seconds": {
+								Type:        framework.TypeInt,
+								Description: "Rotation period in seconds.",
+							},
+							"primary_version": {
+								Type:        framework.TypeString,
+								Description: "Primary crypto key version.",
+							},
+							"state": {
+								Type:        framework.TypeString,
+								Description: "State of the primary crypto key version.",
+							},
+							"protection_level": {
+								Type:        framework.TypeString,
+								Description: "Protection level of the key.",
+							},
+							"algorithm": {
+								Type:        framework.TypeString,
+								Description: "Algorithm of the key version template.",
+							},
+						},
+					}},
+				},
+			},
+			logical.CreateOperation: &framework.PathOperation{
+				Callback: withFieldValidator(b.pathKeysWrite),
+				Summary:  "Create or update a named key.",
+				Responses: map[int][]framework.Response{
+					204: {{Description: "No Content"}},
+				},
+			},
+			logical.UpdateOperation: &framework.PathOperation{
+				Callback: withFieldValidator(b.pathKeysWrite),
+				Summary:  "Create or update a named key.",
+				Responses: map[int][]framework.Response{
+					204: {{Description: "No Content"}},
+				},
+			},
+			logical.DeleteOperation: &framework.PathOperation{
+				Callback: withFieldValidator(b.pathKeysDelete),
+				Summary:  "Delete a named key.",
+				Responses: map[int][]framework.Response{
+					204: {{Description: "No Content"}},
+				},
+			},
 		},
 	}
 }
