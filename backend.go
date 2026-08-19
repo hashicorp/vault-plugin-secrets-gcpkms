@@ -126,19 +126,23 @@ func (b *backend) incrementBillingDataCount(ctx context.Context, req *logical.Re
 	mountPath := ""
 	mountAccessor := ""
 	mountType := ""
+	mountRunningVersion := ""
+
 	if req != nil {
 		mountPath = req.MountPoint
 		mountAccessor = req.MountAccessor
 		mountType = req.MountType
+		mountRunningVersion = req.MountRunningVersion()
 	}
 
 	// Write billing data to the consumption billing manager
 	return b.ConsumptionBillingManager.WriteBillingData(ctx, "gcpkms", map[string]interface{}{
-		"count":            count,
-		"mountAccessor":    mountAccessor,
-		"mountPath":        mountPath,
-		"mountType":        mountType,
-		"backendAwareUUID": b.backendUUID,
+		"count":               count,
+		"mountAccessor":       mountAccessor,
+		"mountPath":           mountPath,
+		"mountType":           mountType,
+		"backendAwareUUID":    b.backendUUID,
+		"mountRunningVersion": mountRunningVersion,
 	})
 }
 
