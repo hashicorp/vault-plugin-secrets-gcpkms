@@ -212,11 +212,11 @@ labels, specify this argument multiple times (e.g. labels="a=b" labels="c=d").
 								Description: "Labels applied to the crypto key.",
 							},
 							"next_rotation_time_seconds": {
-								Type:        framework.TypeInt,
+								Type:        framework.TypeInt64,
 								Description: "Unix epoch timestamp of the next scheduled rotation.",
 							},
 							"rotation_schedule_seconds": {
-								Type:        framework.TypeInt,
+								Type:        framework.TypeInt64,
 								Description: "Rotation period in seconds.",
 							},
 							"primary_version": {
