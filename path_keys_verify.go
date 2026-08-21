@@ -71,8 +71,22 @@ Base64-encoded signature to use for verification. This field is required.
 			},
 		},
 
-		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.UpdateOperation: withFieldValidator(b.pathVerifyWrite),
+		Operations: map[logical.Operation]framework.OperationHandler{
+			logical.UpdateOperation: &framework.PathOperation{
+				Callback: withFieldValidator(b.pathVerifyWrite),
+				Summary:  "Verify a signature using a named key.",
+				Responses: map[int][]framework.Response{
+					200: {{
+						Description: "OK",
+						Fields: map[string]*framework.FieldSchema{
+							"valid": {
+								Type:        framework.TypeBool,
+								Description: "Whether the signature is valid.",
+							},
+						},
+					}},
+				},
+			},
 		},
 	}
 }

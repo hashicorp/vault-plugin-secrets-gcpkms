@@ -39,14 +39,22 @@ it will be left untouched.
 		Operations: map[logical.Operation]framework.OperationHandler{
 			logical.UpdateOperation: &framework.PathOperation{
 				Callback: withFieldValidator(b.pathKeysDeregisterWrite),
+				Summary:  "Deregister a key from Vault.",
 				DisplayAttrs: &framework.DisplayAttributes{
 					OperationSuffix: "key",
+				},
+				Responses: map[int][]framework.Response{
+					204: {{Description: "No Content"}},
 				},
 			},
 			logical.DeleteOperation: &framework.PathOperation{
 				Callback: withFieldValidator(b.pathKeysDeregisterWrite),
+				Summary:  "Deregister a key from Vault.",
 				DisplayAttrs: &framework.DisplayAttributes{
 					OperationSuffix: "key2",
+				},
+				Responses: map[int][]framework.Response{
+					204: {{Description: "No Content"}},
 				},
 			},
 		},

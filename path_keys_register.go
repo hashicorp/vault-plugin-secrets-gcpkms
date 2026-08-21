@@ -62,8 +62,14 @@ not exist at creation time.
 			},
 		},
 
-		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.UpdateOperation: withFieldValidator(b.pathKeysRegisterWrite),
+		Operations: map[logical.Operation]framework.OperationHandler{
+			logical.UpdateOperation: &framework.PathOperation{
+				Callback: withFieldValidator(b.pathKeysRegisterWrite),
+				Summary:  "Register an existing crypto key in Google Cloud KMS.",
+				Responses: map[int][]framework.Response{
+					204: {{Description: "No Content"}},
+				},
+			},
 		},
 	}
 }

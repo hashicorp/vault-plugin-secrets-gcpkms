@@ -47,28 +47,52 @@ requests https://www.googleapis.com/auth/cloudkms.
 		Operations: map[logical.Operation]framework.OperationHandler{
 			logical.CreateOperation: &framework.PathOperation{
 				Callback: withFieldValidator(b.pathConfigWrite),
+				Summary:  "Configure the GCP KMS secrets engine.",
 				DisplayAttrs: &framework.DisplayAttributes{
 					OperationVerb: "configure",
+				},
+				Responses: map[int][]framework.Response{
+					204: {{Description: "No Content"}},
 				},
 			},
 			logical.UpdateOperation: &framework.PathOperation{
 				Callback: withFieldValidator(b.pathConfigWrite),
+				Summary:  "Configure the GCP KMS secrets engine.",
 				DisplayAttrs: &framework.DisplayAttributes{
 					OperationVerb: "configure",
+				},
+				Responses: map[int][]framework.Response{
+					204: {{Description: "No Content"}},
 				},
 			},
 			logical.ReadOperation: &framework.PathOperation{
 				Callback: withFieldValidator(b.pathConfigRead),
+				Summary:  "Return the GCP KMS secrets engine configuration.",
 				DisplayAttrs: &framework.DisplayAttributes{
 					OperationVerb:   "read",
 					OperationSuffix: "configuration",
 				},
+				Responses: map[int][]framework.Response{
+					200: {{
+						Description: "OK",
+						Fields: map[string]*framework.FieldSchema{
+							"scopes": {
+								Type:        framework.TypeSlice,
+								Description: "List of OAuth2 scopes requested when authenticating.",
+							},
+						},
+					}},
+				},
 			},
 			logical.DeleteOperation: &framework.PathOperation{
 				Callback: withFieldValidator(b.pathConfigDelete),
+				Summary:  "Delete the GCP KMS secrets engine configuration.",
 				DisplayAttrs: &framework.DisplayAttributes{
 					OperationVerb:   "delete",
 					OperationSuffix: "configuration",
+				},
+				Responses: map[int][]framework.Response{
+					204: {{Description: "No Content"}},
 				},
 			},
 		},

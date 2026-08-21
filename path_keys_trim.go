@@ -64,20 +64,32 @@ Name of the key in Vault.
 		Operations: map[logical.Operation]framework.OperationHandler{
 			logical.CreateOperation: &framework.PathOperation{
 				Callback: withFieldValidator(b.pathKeysTrimWrite),
+				Summary:  "Trim old crypto key versions from Google Cloud KMS.",
 				DisplayAttrs: &framework.DisplayAttributes{
 					OperationSuffix: "key-versions",
+				},
+				Responses: map[int][]framework.Response{
+					204: {{Description: "No Content"}},
 				},
 			},
 			logical.UpdateOperation: &framework.PathOperation{
 				Callback: withFieldValidator(b.pathKeysTrimWrite),
+				Summary:  "Trim old crypto key versions from Google Cloud KMS.",
 				DisplayAttrs: &framework.DisplayAttributes{
 					OperationSuffix: "key-versions",
+				},
+				Responses: map[int][]framework.Response{
+					204: {{Description: "No Content"}},
 				},
 			},
 			logical.DeleteOperation: &framework.PathOperation{
 				Callback: withFieldValidator(b.pathKeysTrimWrite),
+				Summary:  "Trim old crypto key versions from Google Cloud KMS.",
 				DisplayAttrs: &framework.DisplayAttributes{
 					OperationSuffix: "key-versions2",
+				},
+				Responses: map[int][]framework.Response{
+					204: {{Description: "No Content"}},
 				},
 			},
 		},
