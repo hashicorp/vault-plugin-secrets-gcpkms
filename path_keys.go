@@ -44,17 +44,6 @@ func (b *backend) pathKeys() *framework.Path {
 			logical.ListOperation: &framework.PathOperation{
 				Callback: withFieldValidator(b.pathKeysList),
 				Summary:  "List all named keys.",
-				Responses: map[int][]framework.Response{
-					200: {{
-						Description: "OK",
-						Fields: map[string]*framework.FieldSchema{
-							"keys": {
-								Type:        framework.TypeSlice,
-								Description: "List of named keys.",
-							},
-						},
-					}},
-				},
 			},
 		},
 	}
