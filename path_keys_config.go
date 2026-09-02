@@ -61,23 +61,55 @@ negative value, there is no maximum key version.
 		Operations: map[logical.Operation]framework.OperationHandler{
 			logical.ReadOperation: &framework.PathOperation{
 				Callback: withFieldValidator(b.pathKeysConfigRead),
+				Summary:  "Return the Vault configuration for a named key.",
 				DisplayAttrs: &framework.DisplayAttributes{
 					OperationVerb:   "read",
 					OperationSuffix: "key-configuration",
 				},
+				Responses: map[int][]framework.Response{
+					200: {{
+						Description: "OK",
+						Fields: map[string]*framework.FieldSchema{
+							"name": {
+								Type:        framework.TypeString,
+								Description: "Name of the key in Vault.",
+							},
+							"crypto_key": {
+								Type:        framework.TypeString,
+								Description: "Full Google Cloud KMS resource ID of the crypto key.",
+							},
+							"min_version": {
+								Type:        framework.TypeInt,
+								Description: "Minimum allowed crypto key version.",
+							},
+							"max_version": {
+								Type:        framework.TypeInt,
+								Description: "Maximum allowed crypto key version.",
+							},
+						},
+					}},
+				},
 			},
 			logical.CreateOperation: &framework.PathOperation{
 				Callback: withFieldValidator(b.pathKeysConfigWrite),
+				Summary:  "Configure a named key in Vault.",
 				DisplayAttrs: &framework.DisplayAttributes{
 					OperationVerb:   "configure",
 					OperationSuffix: "key",
 				},
+				Responses: map[int][]framework.Response{
+					204: {{Description: "No Content"}},
+				},
 			},
 			logical.UpdateOperation: &framework.PathOperation{
 				Callback: withFieldValidator(b.pathKeysConfigWrite),
+				Summary:  "Configure a named key in Vault.",
 				DisplayAttrs: &framework.DisplayAttributes{
 					OperationVerb:   "configure",
 					OperationSuffix: "key",
+				},
+				Responses: map[int][]framework.Response{
+					204: {{Description: "No Content"}},
 				},
 			},
 		},

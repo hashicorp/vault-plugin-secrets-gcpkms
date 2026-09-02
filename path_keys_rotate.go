@@ -54,8 +54,22 @@ point to a valid Google Cloud KMS crypto key.
 			},
 		},
 
-		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.UpdateOperation: withFieldValidator(b.pathKeysRotateWrite),
+		Operations: map[logical.Operation]framework.OperationHandler{
+			logical.UpdateOperation: &framework.PathOperation{
+				Callback: withFieldValidator(b.pathKeysRotateWrite),
+				Summary:  "Rotate a crypto key to a new primary version.",
+				Responses: map[int][]framework.Response{
+					200: {{
+						Description: "OK",
+						Fields: map[string]*framework.FieldSchema{
+							"key_version": {
+								Type:        framework.TypeInt,
+								Description: "New primary crypto key version.",
+							},
+						},
+					}},
+				},
+			},
 		},
 	}
 }
