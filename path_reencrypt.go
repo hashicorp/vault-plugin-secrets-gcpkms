@@ -74,7 +74,7 @@ unspecified, this defaults to the latest active crypto key version.
 						Description: "OK",
 						Fields: map[string]*framework.FieldSchema{
 							"key_version": {
-								Type:        framework.TypeString,
+								Type:        framework.TypeInt,
 								Description: "Key version used for re-encryption.",
 							},
 							"ciphertext": {
