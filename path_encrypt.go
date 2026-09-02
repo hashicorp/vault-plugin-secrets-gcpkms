@@ -75,7 +75,7 @@ limitations by key types.
 						Description: "OK",
 						Fields: map[string]*framework.FieldSchema{
 							"key_version": {
-								Type:        framework.TypeString,
+								Type:        framework.TypeInt,
 								Description: "Key version used for encryption.",
 							},
 							"ciphertext": {
