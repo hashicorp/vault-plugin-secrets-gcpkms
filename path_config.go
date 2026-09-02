@@ -77,7 +77,7 @@ requests https://www.googleapis.com/auth/cloudkms.
 						Description: "OK",
 						Fields: map[string]*framework.FieldSchema{
 							"scopes": {
-								Type:        framework.TypeSlice,
+								Type:        framework.TypeCommaStringSlice,
 								Description: "List of OAuth2 scopes requested when authenticating.",
 							},
 						},
