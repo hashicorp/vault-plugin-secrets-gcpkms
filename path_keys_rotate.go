@@ -63,7 +63,7 @@ point to a valid Google Cloud KMS crypto key.
 						Description: "OK",
 						Fields: map[string]*framework.FieldSchema{
 							"key_version": {
-								Type:        framework.TypeString,
+								Type:        framework.TypeInt,
 								Description: "New primary crypto key version.",
 							},
 						},
