@@ -1,3 +1,14 @@
+## v0.25.0
+### September 11, 2026
+
+* chore: automated Go/dependency update via vault-plugin-release (#97)
+* Added missing metadata for OpenAPI endpoints (#93)
+* added mountRunningVersion to mount attribution. (#95)
+* google.golang.org/grpc upgrade (#94)
+* Vault 46660 gcpkms metrics attribution (#92)
+* Bump golang.org/x/net from 0.54.0 to 0.55.0 (#90)
+* Bump golang.org/x/crypto from 0.49.0 to 0.52.0 (#81)
+
 ## v0.23.0
 ### March 20, 2026
 
