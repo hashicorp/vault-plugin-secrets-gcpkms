@@ -9,6 +9,11 @@
 * Bump golang.org/x/net from 0.54.0 to 0.55.0 (#90)
 * Bump golang.org/x/crypto from 0.49.0 to 0.52.0 (#81)
 
+## v0.24.0
+### April 14, 2026
+
+* Counting of successful requests for billing (#85)
+
 ## v0.23.0
 ### March 20, 2026
 
