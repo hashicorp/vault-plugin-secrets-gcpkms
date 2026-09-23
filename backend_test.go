@@ -15,7 +15,9 @@ import (
 	"time"
 
 	"github.com/gammazero/workerpool"
+	"github.com/hashicorp/vault/sdk/helper/testhelpers/billing"
 	"github.com/hashicorp/vault/sdk/logical"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc/connectivity"
@@ -29,7 +31,7 @@ import (
 )
 
 // testBackend creates a new isolated instance of the backend for testing.
-func testBackend(tb testing.TB) (*backend, logical.Storage, *mockConsumptionBillingManager) {
+func testBackend(tb testing.TB) (*backend, logical.Storage, *billing.MockConsumptionBillingManager) {
 	tb.Helper()
 
 	config := logical.TestBackendConfig()
@@ -41,7 +43,7 @@ func testBackend(tb testing.TB) (*backend, logical.Storage, *mockConsumptionBill
 		tb.Fatal(err)
 	}
 	be := b.(*backend)
-	mock := newMockConsumptionBillingManager()
+	mock := billing.NewMockConsumptionBillingManager()
 	be.Backend.ConsumptionBillingManager = mock
 	return be, config.StorageView, mock
 }
@@ -426,4 +428,19 @@ func TestBackend_Config(t *testing.T) {
 			}
 		})
 	}
+}
+
+func verifyGcpkmsAttribution(t *testing.T, m *billing.MockConsumptionBillingManager, mountAccessor, mountPath string, expectedCount uint64) {
+	t.Helper()
+	attribution, ok := m.GetAttribution(mountAccessor)
+	require.True(t, ok, "Expected attribution entry for %s", mountAccessor)
+	require.Equal(t, uint64(expectedCount), attribution.Count, "count mismatch")
+	require.Equal(t, mountPath, attribution.MountPath, "mountPath mismatch")
+	require.Equal(t, mountAccessor, attribution.MountAccessor, "mountAccessor mismatch")
+}
+
+func verifyNoGcpkmsAttribution(t *testing.T, m *billing.MockConsumptionBillingManager, mountAccessor string) {
+	t.Helper()
+	_, ok := m.GetAttribution(mountAccessor)
+	require.False(t, ok, "Expected no attribution entry for %s", mountAccessor)
 }
