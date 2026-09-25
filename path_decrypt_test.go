@@ -101,7 +101,7 @@ func TestPathDecrypt_Write(t *testing.T) {
 				}
 
 				// Verify billing data count and attribution
-				require.Equal(t, uint64(1), mock.totalCount.Load())
+				require.Equal(t, uint64(1), mock.TotalCount())
 				verifyGcpkmsAttribution(t, mock, "auth_abc123", "gcpkms/", 1)
 			})
 		}
@@ -169,7 +169,7 @@ func TestPathDecrypt_Write(t *testing.T) {
 					t.Fatal(err)
 				}
 
-				require.Equal(t, uint64(1), mock.totalCount.Load())
+				require.Equal(t, uint64(1), mock.TotalCount())
 				verifyGcpkmsAttribution(t, mock, "auth_abc123", "gcpkms/", 1)
 
 				if v, exp := resp.Data["plaintext"], tc.exp; v != exp {

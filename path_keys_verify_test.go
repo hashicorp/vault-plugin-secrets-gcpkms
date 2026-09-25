@@ -124,7 +124,7 @@ func TestPathVerify_Write(t *testing.T) {
 				}
 
 				// Verify billing data count and attribution
-				require.Equal(t, uint64(1), mock.totalCount.Load())
+				require.Equal(t, uint64(1), mock.TotalCount())
 				verifyGcpkmsAttribution(t, mock, "auth_abc123", "gcpkms/", 1)
 			})
 		}
