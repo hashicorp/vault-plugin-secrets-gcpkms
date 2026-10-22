@@ -1,3 +1,11 @@
+## v0.25.1
+### October 22, 2026
+
+* VAULT-50042: Bump golang.org/x/net to v0.60.0 (#101)
+* VAULT-50042: bump Go to 1.27.3 (#100)
+* migrate mock billing manager to shared sdk package (#99)
+* [CHANGELOG] Prepare for v0.25.0 release (#98)
+
 ## v0.25.0
 ### September 11, 2026
 
