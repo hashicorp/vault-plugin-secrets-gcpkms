@@ -453,7 +453,10 @@ func (b *backend) pathKeysWrite(ctx context.Context, req *logical.Request, d *fr
 			var paths []string
 			ck.Name = fmt.Sprintf("%s/cryptoKeys/%s", kr.Name, cryptoKey)
 
-			if ck.Labels != nil {
+			// Only replace labels when the caller set them. The field's zero
+			// value is a non-nil empty map, and an empty map in the update
+			// mask would remove all existing labels from the crypto key.
+			if _, ok := d.GetOk("labels"); ok {
 				paths = append(paths, "labels")
 			}
 
@@ -465,14 +468,19 @@ func (b *backend) pathKeysWrite(ctx context.Context, req *logical.Request, d *fr
 				paths = append(paths, "next_rotation_time")
 			}
 
-			resp, err = kmsClient.UpdateCryptoKey(ctx, &kmspb.UpdateCryptoKeyRequest{
-				CryptoKey: ck,
-				UpdateMask: &field_mask.FieldMask{
-					Paths: paths,
-				},
-			})
-			if err != nil {
-				return nil, errwrap.Wrapf("failed to update crypto key: {{err}}", err)
+			if len(paths) == 0 {
+				// Nothing to change on the crypto key.
+				resp = ck
+			} else {
+				resp, err = kmsClient.UpdateCryptoKey(ctx, &kmspb.UpdateCryptoKeyRequest{
+					CryptoKey: ck,
+					UpdateMask: &field_mask.FieldMask{
+						Paths: paths,
+					},
+				})
+				if err != nil {
+					return nil, errwrap.Wrapf("failed to update crypto key: {{err}}", err)
+				}
 			}
 		} else {
 			return nil, errwrap.Wrapf("failed to create crypto key: {{err}}", err)
